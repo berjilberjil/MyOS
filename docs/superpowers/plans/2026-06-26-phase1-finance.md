@@ -1681,7 +1681,7 @@ export function donutDashArray(
 	let acc = 0;
 	return values.map((v) => {
 		const dash = total > 0 ? (v / total) * circumference : 0;
-		const seg = { dash, gap: circumference - dash, offset: -acc };
+		const seg = { dash, gap: circumference - dash, offset: acc === 0 ? 0 : -acc };
 		acc += dash;
 		return seg;
 	});
