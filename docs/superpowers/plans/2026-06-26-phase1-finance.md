@@ -2753,15 +2753,14 @@ async function login(page: Page) {
 	await page.waitForURL((url) => !url.pathname.startsWith('/login'));
 }
 
+// Idempotent against the persistent local DB: always ensure at least one account
+// exists (quick-add auto-selects the first). Repeated runs just add more — harmless.
 async function ensureAccount(page: Page) {
 	await page.goto('/finance/accounts');
-	const cards = page.locator('text=/₹/');
-	if ((await cards.count()) === 0) {
-		await page.getByPlaceholder('Name (e.g. HDFC)').fill('Test Bank');
-		await page.getByPlaceholder('Opening ₹').fill('10000');
-		await page.getByRole('button', { name: 'Add' }).click();
-		await expect(page.getByText('Test Bank')).toBeVisible();
-	}
+	await page.getByPlaceholder('Name (e.g. HDFC)').fill('Test Bank');
+	await page.getByPlaceholder('Opening ₹').fill('10000');
+	await page.getByRole('button', { name: 'Add', exact: true }).click();
+	await expect(page.getByText('Test Bank').first()).toBeVisible();
 }
 
 test('quick-add logs a transaction and it appears in the list', async ({ page }) => {
@@ -2773,7 +2772,7 @@ test('quick-add logs a transaction and it appears in the list', async ({ page })
 	await page.getByRole('button', { name: 'Save' }).click();
 
 	await page.goto('/finance/transactions');
-	await expect(page.getByText('₹199.50')).toBeVisible();
+	await expect(page.getByText('₹199.50').first()).toBeVisible();
 });
 
 test('offline quick-add syncs after reconnect', async ({ page, context }) => {
@@ -2788,7 +2787,7 @@ test('offline quick-add syncs after reconnect', async ({ page, context }) => {
 	await context.setOffline(false);
 	// Reload while online → authed layout runs flushFinance() on mount, syncing the queue.
 	await page.goto('/finance/transactions');
-	await expect(page.getByText('₹42.00')).toBeVisible({ timeout: 15_000 });
+	await expect(page.getByText('₹42.00').first()).toBeVisible({ timeout: 15_000 });
 });
 ```
 
