@@ -22,9 +22,11 @@ Local dev owner (placeholder — change before real use): `owner@myos.local` / `
 bun run test -- --run    # Vitest unit suite
 bun run check            # svelte-check (must be 0 errors)
 bunx playwright test     # e2e (builds + previews on :4173)
-# RLS integration test (needs local stack):
-SUPABASE_ANON_KEY="$(bunx supabase status -o env | grep '^ANON_KEY=' | cut -d'\"' -f2)" \
-  bun run test -- --run tests/unit/rls.test.ts
+# RLS integration tests (needs local stack). Signup is disabled, so the tests
+# create users via the admin/service_role API — both keys required:
+export SUPABASE_ANON_KEY="$(bunx supabase status -o env | grep '^ANON_KEY=' | cut -d'\"' -f2)"
+export SUPABASE_SERVICE_ROLE_KEY="$(bunx supabase status -o env | grep '^SERVICE_ROLE_KEY=' | cut -d'\"' -f2)"
+bun run test -- --run tests/unit/rls.test.ts tests/unit/finance-rls.test.ts
 ```
 
 ## Conventions

@@ -226,7 +226,7 @@ Expected: migration `0002_finance` applies with no error; `bunx supabase db rese
 
 - [ ] **Step 3: Write the RLS isolation test**
 
-Create `tests/unit/finance-rls.test.ts` (mirrors `tests/unit/rls.test.ts`):
+Create `tests/unit/finance-rls.test.ts` (mirrors `tests/unit/rls.test.ts`). Public signup is disabled (`config.toml` `enable_signup = false`), so users are created via the admin API (service_role), not `signUp`:
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -234,15 +234,17 @@ import { createClient } from '@supabase/supabase-js';
 
 const URL = process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321';
 const ANON = process.env.SUPABASE_ANON_KEY ?? '';
+const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
 
 async function userClient(email: string) {
+	const admin = createClient(URL, SERVICE, { auth: { autoRefreshToken: false, persistSession: false } });
+	await admin.auth.admin.createUser({ email, password: 'Passw0rd!test', email_confirm: true });
 	const c = createClient(URL, ANON);
-	await c.auth.signUp({ email, password: 'Passw0rd!test' });
 	await c.auth.signInWithPassword({ email, password: 'Passw0rd!test' });
 	return c;
 }
 
-describe.skipIf(!ANON)('finance RLS isolation', () => {
+describe.skipIf(!ANON || !SERVICE)('finance RLS isolation', () => {
 	it('a user cannot read another user accounts', async () => {
 		const stamp = `${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
 		const a = await userClient(`fa_${stamp}@t.test`);
@@ -260,8 +262,9 @@ describe.skipIf(!ANON)('finance RLS isolation', () => {
 
 Run:
 ```bash
-SUPABASE_ANON_KEY="$(bunx supabase status -o env | grep '^ANON_KEY=' | cut -d'"' -f2)" \
-  bun run test -- --run tests/unit/finance-rls.test.ts
+export SUPABASE_ANON_KEY="$(bunx supabase status -o env | grep '^ANON_KEY=' | cut -d'"' -f2)"
+export SUPABASE_SERVICE_ROLE_KEY="$(bunx supabase status -o env | grep '^SERVICE_ROLE_KEY=' | cut -d'"' -f2)"
+bun run test -- --run tests/unit/finance-rls.test.ts
 ```
 Expected: PASS (B sees none of A's rows).
 
@@ -2805,7 +2808,7 @@ git commit -m "test(finance): e2e quick-add + offline-then-sync"
 ## Final verification
 
 - [ ] `bun run test -- --run` → all unit suites pass (money, dates, calc, accounts, charts, recurring).
-- [ ] RLS: `SUPABASE_ANON_KEY="$(bunx supabase status -o env | grep '^ANON_KEY=' | cut -d'"' -f2)" bun run test -- --run tests/unit/finance-rls.test.ts` → pass.
+- [ ] RLS: export both `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` from `bunx supabase status -o env`, then `bun run test -- --run tests/unit/finance-rls.test.ts` → pass. (Signup is disabled, so the test creates users via the admin/service_role API.)
 - [ ] `bun run check` → 0 errors.
 - [ ] `bunx playwright test` → all e2e pass.
 - [ ] Manual: create accounts, log expenses/income/transfer, set budgets, add recurring (verify catch-up + idempotency), add a goal + contribute, add a SIP, take the app offline and log a transaction, reconnect and confirm it syncs and balances reconcile.

@@ -34,6 +34,120 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          archived: boolean
+          balance_paise: number
+          created_at: string
+          currency: string
+          id: string
+          name: string
+          opening_balance_paise: number
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          balance_paise?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          name: string
+          opening_balance_paise?: number
+          type: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          archived?: boolean
+          balance_paise?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          name?: string
+          opening_balance_paise?: number
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          icon: string | null
+          id: string
+          kind: string
+          monthly_budget_paise: number
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          kind: string
+          monthly_budget_paise?: number
+          name: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          kind?: string
+          monthly_budget_paise?: number
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      investments: {
+        Row: {
+          created_at: string
+          current_value_paise: number
+          id: string
+          invested_paise: number
+          name: string
+          sip_amount_paise: number | null
+          sip_day: number | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_value_paise?: number
+          id?: string
+          invested_paise?: number
+          name: string
+          sip_amount_paise?: number | null
+          sip_day?: number | null
+          type: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          current_value_paise?: number
+          id?: string
+          invested_paise?: number
+          name?: string
+          sip_amount_paise?: number | null
+          sip_day?: number | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       links: {
         Row: {
           created_at: string
@@ -132,6 +246,206 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      recurring: {
+        Row: {
+          account_id: string
+          active: boolean
+          amount_paise: number
+          cadence: string
+          category_id: string | null
+          created_at: string
+          id: string
+          interval_days: number | null
+          investment_id: string | null
+          kind: string
+          name: string
+          next_run_on: string
+          plan: string | null
+          renews_on: string | null
+          updated_at: string
+          user_id: string
+          vendor: string | null
+        }
+        Insert: {
+          account_id: string
+          active?: boolean
+          amount_paise: number
+          cadence: string
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          interval_days?: number | null
+          investment_id?: string | null
+          kind: string
+          name: string
+          next_run_on: string
+          plan?: string | null
+          renews_on?: string | null
+          updated_at?: string
+          user_id?: string
+          vendor?: string | null
+        }
+        Update: {
+          account_id?: string
+          active?: boolean
+          amount_paise?: number
+          cadence?: string
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          interval_days?: number | null
+          investment_id?: string | null
+          kind?: string
+          name?: string
+          next_run_on?: string
+          plan?: string | null
+          renews_on?: string | null
+          updated_at?: string
+          user_id?: string
+          vendor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_investment_id_fkey"
+            columns: ["investment_id"]
+            isOneToOne: false
+            referencedRelation: "investments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      savings_goals: {
+        Row: {
+          account_id: string | null
+          created_at: string
+          deadline: string | null
+          id: string
+          name: string
+          saved_paise: number
+          target_paise: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string
+          deadline?: string | null
+          id?: string
+          name: string
+          saved_paise?: number
+          target_paise: number
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string
+          deadline?: string | null
+          id?: string
+          name?: string
+          saved_paise?: number
+          target_paise?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "savings_goals_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          account_id: string
+          amount_paise: number
+          category_id: string | null
+          created_at: string
+          id: string
+          note: string | null
+          occurred_on: string
+          recurring_id: string | null
+          transfer_account_id: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          amount_paise: number
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          occurred_on: string
+          recurring_id?: string | null
+          transfer_account_id?: string | null
+          type: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          account_id?: string
+          amount_paise?: number
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          occurred_on?: string
+          recurring_id?: string | null
+          transfer_account_id?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_recurring_id_fkey"
+            columns: ["recurring_id"]
+            isOneToOne: false
+            referencedRelation: "recurring"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_transfer_account_id_fkey"
+            columns: ["transfer_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
