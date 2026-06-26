@@ -4,6 +4,7 @@
 	import { cn } from '$lib/utils';
 	import { seedDefaultCategories } from '$lib/finance/categories';
 	import { reconcileAll } from '$lib/finance/accounts';
+	import { runCatchUp } from '$lib/finance/recurring';
 
 	let { children } = $props();
 
@@ -20,6 +21,7 @@
 	onMount(async () => {
 		if (!navigator.onLine) return;
 		await seedDefaultCategories();
+		await runCatchUp();
 		await reconcileAll();
 	});
 </script>

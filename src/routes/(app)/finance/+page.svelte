@@ -11,12 +11,14 @@
 	import { categoriesRepo } from '$lib/finance/categories';
 	import { listByMonth } from '$lib/finance/transactions';
 	import { budgetRollup, budgetTotals } from '$lib/finance/budgets';
+	import { listActiveSorted } from '$lib/finance/recurring';
 
 	let month = $state(monthKey(todayIso()));
 
 	const accounts = createQuery(() => ({ queryKey: ['finance', 'accounts'], queryFn: () => accountsRepo.list() }));
 	const categories = createQuery(() => ({ queryKey: ['finance', 'categories'], queryFn: () => categoriesRepo.list() }));
 	const txns = createQuery(() => ({ queryKey: ['finance', 'txns', month], queryFn: () => listByMonth(month) }));
+	const recurring = createQuery(() => ({ queryKey: ['finance', 'recurring'], queryFn: () => listActiveSorted() }));
 
 	const income = $derived((txns.data ?? []).filter((t) => t.type === 'income').reduce((s, t) => s + t.amount_paise, 0));
 	const expense = $derived((txns.data ?? []).filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount_paise, 0));
@@ -67,6 +69,20 @@
 		<Card.Content class="flex flex-wrap gap-4">
 			{#each accounts.data ?? [] as a (a.id)}
 				<div class="flex flex-col"><span class="text-xs text-muted-foreground">{a.name}</span><span class="font-semibold">{formatINR(a.balance_paise)}</span></div>
+			{/each}
+		</Card.Content>
+	</Card.Root>
+
+	<Card.Root>
+		<Card.Header><Card.Title class="text-base">Upcoming</Card.Title></Card.Header>
+		<Card.Content class="divide-y divide-border">
+			{#each (recurring.data ?? []).slice(0, 5) as r (r.id)}
+				<div class="flex items-center justify-between py-2 text-sm">
+					<span>{r.name} <span class="text-xs text-muted-foreground">· {r.next_run_on}</span></span>
+					<span class={r.kind === 'income' ? 'text-emerald-500' : 'text-rose-500'}>{formatINR(r.amount_paise)}</span>
+				</div>
+			{:else}
+				<p class="py-4 text-center text-sm text-muted-foreground">No recurring items.</p>
 			{/each}
 		</Card.Content>
 	</Card.Root>
