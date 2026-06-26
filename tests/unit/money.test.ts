@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { toPaise, fromPaise, formatINR } from '$lib/money';
+import { toPaise, fromPaise, formatINR, sumPaise } from '$lib/money';
 
 describe('money', () => {
 	it('converts rupees to integer paise without float drift', () => {
@@ -13,5 +13,9 @@ describe('money', () => {
 	it('formats INR', () => {
 		expect(formatINR(4000000)).toContain('40,000');
 		expect(formatINR(4000000)).toContain('₹');
+	});
+	it('sums paise with no float drift', () => {
+		expect(sumPaise([1999, 1, 4000000])).toBe(4002000);
+		expect(sumPaise([])).toBe(0);
 	});
 });

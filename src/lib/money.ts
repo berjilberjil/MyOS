@@ -13,3 +13,7 @@ const inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' 
 export function formatINR(paise: number): string {
 	return inr.format(fromPaise(paise));
 }
+
+export function sumPaise(values: number[]): number {
+	return values.reduce((total, v) => total + v, 0);
+}
