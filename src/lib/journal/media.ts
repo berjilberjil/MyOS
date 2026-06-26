@@ -30,6 +30,24 @@ export async function uploadJournalImage(file: File, entryId: string): Promise<s
 	return path;
 }
 
+// Upload a non-image file (PDF/etc.) for a journal entry. Returns path + metadata.
+export async function uploadJournalFile(
+	file: File,
+	entryId: string
+): Promise<{ path: string; name: string; size: number; mime: string }> {
+	const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+	const path = `journal/${entryId}/${crypto.randomUUID()}-${safe}`;
+	await storage.upload(file, path);
+	await mediaRepo.create({
+		owner_type: 'journal',
+		owner_id: entryId,
+		storage_path: path,
+		mime: file.type,
+		size_bytes: file.size
+	} as Partial<MediaAsset>);
+	return { path, name: file.name, size: file.size, mime: file.type };
+}
+
 // Sign a single storage path (week-long TTL).
 export async function signedUrlFor(path: string): Promise<string> {
 	return storage.signedUrl(path, 60 * 60 * 24 * 7);

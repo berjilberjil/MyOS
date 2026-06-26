@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { useQueryClient } from '@tanstack/svelte-query';
-	import { Button } from '$lib/components/ui/button';
 	import NotesEditor from '$lib/notes/editor/NotesEditor.svelte';
 	import { createNote, updateNote, type Note } from '$lib/notes/notes';
 	import { uploadNoteImage, uploadNoteFile, withPathMedia } from '$lib/notes/media';
@@ -9,11 +9,12 @@
 	import type { JournalDoc } from '$lib/journal/types';
 	import Pin from '@lucide/svelte/icons/pin';
 	import Link2 from '@lucide/svelte/icons/link';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 
 	let { note }: { note?: Note } = $props();
 
 	const qc = useQueryClient();
-	const noteId = note?.id ?? crypto.randomUUID();
+	const savedId = note?.id ?? crypto.randomUUID();
 
 	/* svelte-ignore state_referenced_locally */
 	let title = $state(note?.title ?? '');
@@ -21,66 +22,100 @@
 	let pinned = $state(note?.pinned ?? false);
 	/* svelte-ignore state_referenced_locally */
 	let doc = $state<JournalDoc>(note?.body_json ?? { type: 'doc', content: [] });
-	let saving = $state(false);
+
+	/* svelte-ignore state_referenced_locally */
+	let created = $state(!!note);
+	let touched = false;
+	let saveState = $state<'idle' | 'saving' | 'saved'>('idle');
 	let copied = $state(false);
+	let timer: ReturnType<typeof setTimeout> | undefined;
 
 	async function handleImage(file: File): Promise<string> {
-		const path = await uploadNoteImage(file, noteId);
+		const path = await uploadNoteImage(file, savedId);
 		return signedUrlFor(path);
 	}
 	async function handleFile(file: File) {
-		const up = await uploadNoteFile(file, noteId);
+		const up = await uploadNoteFile(file, savedId);
 		return { src: await signedUrlFor(up.path), name: up.name, size: up.size, mime: up.mime };
 	}
 
+	async function persist() {
+		saveState = 'saving';
+		try {
+			const body_json = withPathMedia($state.snapshot(doc) as JournalDoc);
+			if (created) {
+				await updateNote(savedId, { title, body_json, pinned });
+			} else {
+				await createNote({ id: savedId, title, body_json, pinned });
+				created = true;
+			}
+			qc.invalidateQueries({ queryKey: ['notes'] });
+			saveState = 'saved';
+		} catch {
+			saveState = 'idle';
+		}
+	}
+
+	function markDirty() {
+		touched = true;
+	}
+
+	// Debounced auto-save whenever the note changes.
+	$effect(() => {
+		void [title, pinned, doc];
+		if (!touched) return;
+		saveState = 'saving';
+		clearTimeout(timer);
+		timer = setTimeout(persist, 700);
+	});
+
+	onDestroy(() => clearTimeout(timer));
+
 	function share() {
-		navigator.clipboard?.writeText(`${location.origin}/notes/${noteId}`);
+		navigator.clipboard?.writeText(`${location.origin}/notes/${savedId}`);
 		copied = true;
 		setTimeout(() => (copied = false), 1600);
 	}
 
-	async function save() {
-		saving = true;
-		try {
-			const body_json = withPathMedia($state.snapshot(doc) as JournalDoc);
-			if (note) await updateNote(note.id, { title, body_json, pinned });
-			else await createNote({ id: noteId, title, body_json, pinned });
-			qc.invalidateQueries({ queryKey: ['notes'] });
-			goto('/notes');
-		} finally {
-			saving = false;
-		}
+	async function back() {
+		clearTimeout(timer);
+		if (touched) await persist();
+		goto('/notes');
 	}
 </script>
 
 <div class="mx-auto flex w-full max-w-3xl flex-col gap-4">
 	<div class="flex items-center justify-between gap-2">
-		<button
-			class="chip"
-			class:on={pinned}
-			onclick={() => (pinned = !pinned)}
-			aria-pressed={pinned}
-		>
-			<Pin class="size-3.5" />
-			{pinned ? 'Pinned' : 'Pin'}
+		<button class="chip" onclick={back}>
+			<ArrowLeft class="size-3.5" />
+			Back
 		</button>
 		<div class="flex items-center gap-2">
+			<span class="status">
+				{#if saveState === 'saving'}Saving…{:else if saveState === 'saved'}Saved{/if}
+			</span>
+			<button class="chip" class:on={pinned} onclick={() => { pinned = !pinned; markDirty(); }} aria-pressed={pinned}>
+				<Pin class="size-3.5" />
+				{pinned ? 'Pinned' : 'Pin'}
+			</button>
 			<button class="chip" onclick={share}>
 				<Link2 class="size-3.5" />
 				{copied ? 'Copied' : 'Share'}
 			</button>
-			<Button variant="ghost" size="sm" onclick={() => goto('/notes')}>Cancel</Button>
-			<Button size="sm" disabled={saving} onclick={save}>{saving ? 'Saving…' : 'Save'}</Button>
 		</div>
 	</div>
 
-	<input
-		class="title-input"
-		placeholder="Untitled"
-		bind:value={title}
-	/>
+	<input class="title-input" placeholder="Untitled" bind:value={title} oninput={markDirty} />
 
-	<NotesEditor content={doc} onUpdate={(d) => (doc = d)} onImageUpload={handleImage} onFileUpload={handleFile} />
+	<NotesEditor
+		content={doc}
+		onUpdate={(d) => {
+			doc = d;
+			markDirty();
+		}}
+		onImageUpload={handleImage}
+		onFileUpload={handleFile}
+	/>
 </div>
 
 <style>
@@ -97,6 +132,12 @@
 	}
 	.title-input::placeholder {
 		color: color-mix(in oklch, var(--muted-foreground) 60%, transparent);
+	}
+	.status {
+		min-width: 3.5rem;
+		text-align: right;
+		font-size: var(--text-xs);
+		color: var(--muted-foreground);
 	}
 	.chip {
 		display: inline-flex;

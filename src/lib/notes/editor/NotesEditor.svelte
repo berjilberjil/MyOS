@@ -9,6 +9,7 @@
 	import { Details, DetailsSummary, DetailsContent } from '@tiptap/extension-details';
 	import { BubbleMenu } from '@tiptap/extension-bubble-menu';
 	import { DragHandle } from '@tiptap/extension-drag-handle';
+	import { TextSelection } from '@tiptap/pm/state';
 	import type { JournalDoc } from '$lib/journal/types';
 	import { Callout, FileBlock, Bookmark } from './blocks';
 	import { SlashCommand } from './slash';
@@ -35,6 +36,19 @@
 	let fileInput: HTMLInputElement;
 	let editor = $state<Editor>();
 	let active = $state({ bold: false, italic: false, underline: false, strike: false, code: false, link: false });
+
+	async function insertFiles(files: File[]) {
+		if (!editor) return;
+		for (const f of files) {
+			if (f.type.startsWith('image/') && onImageUpload) {
+				const src = await onImageUpload(f);
+				editor.chain().focus().setImage({ src }).run();
+			} else if (onFileUpload) {
+				const up = await onFileUpload(f);
+				editor.chain().focus().insertContent({ type: 'fileBlock', attrs: up }).run();
+			}
+		}
+	}
 
 	function refresh() {
 		if (!editor) return;
@@ -65,7 +79,8 @@
 				SlashCommand,
 				BubbleMenu.configure({
 					element: bubbleEl,
-					shouldShow: ({ editor: e, from, to }) => from !== to && e.isEditable && !e.isActive('codeBlock')
+					shouldShow: ({ editor: e, from, to }) =>
+						e.isFocused && from !== to && e.isEditable && !e.isActive('codeBlock')
 				}),
 				DragHandle.configure({
 					render: () => {
@@ -79,6 +94,31 @@
 				Placeholder.configure({ placeholder, includeChildren: true })
 			],
 			content: content && Object.keys(content).length ? content : undefined,
+			editorProps: {
+				handlePaste: (_view, event) => {
+					const files = Array.from(event.clipboardData?.files ?? []).filter(
+						(f) => f.type.startsWith('image/') || onFileUpload
+					);
+					if (!files.length) return false;
+					event.preventDefault();
+					insertFiles(files);
+					return true;
+				},
+				handleDrop: (view, event, _slice, moved) => {
+					if (moved) return false;
+					const files = Array.from(event.dataTransfer?.files ?? []);
+					if (!files.length) return false;
+					event.preventDefault();
+					const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });
+					if (coords) {
+						view.dispatch(
+							view.state.tr.setSelection(TextSelection.near(view.state.doc.resolve(coords.pos)))
+						);
+					}
+					insertFiles(files);
+					return true;
+				}
+			},
 			onUpdate: ({ editor }) => onUpdate(editor.getJSON() as JournalDoc),
 			onSelectionUpdate: refresh,
 			onTransaction: refresh

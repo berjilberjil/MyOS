@@ -3,7 +3,7 @@
 	import { createQuery } from '@tanstack/svelte-query';
 	import EntryForm from '$lib/components/journal/EntryForm.svelte';
 	import { entriesRepo } from '$lib/journal/entries';
-	import { withSignedImages } from '$lib/journal/media';
+	import { withSignedMedia } from '$lib/notes/media';
 	import type { JournalEntry } from '$lib/journal/types';
 
 	const id = $derived(page.params.id ?? '');
@@ -13,7 +13,7 @@
 		queryFn: async (): Promise<JournalEntry | null> => {
 			const e = await entriesRepo.get(id);
 			if (!e) return null;
-			return { ...e, body_json: await withSignedImages(e.body_json) };
+			return { ...e, body_json: await withSignedMedia(e.body_json) };
 		}
 	}));
 </script>

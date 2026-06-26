@@ -5,9 +5,10 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { cn } from '$lib/utils';
-	import Editor from './Editor.svelte';
+	import NotesEditor from '$lib/notes/editor/NotesEditor.svelte';
 	import { createEntry, updateEntry } from '$lib/journal/entries';
-	import { uploadJournalImage, signedUrlFor, withPathImages } from '$lib/journal/media';
+	import { uploadJournalImage, uploadJournalFile, signedUrlFor } from '$lib/journal/media';
+	import { withPathMedia } from '$lib/notes/media';
 	import { todayIso } from '$lib/finance/dates';
 	import { MOODS, type JournalDoc, type JournalEntry } from '$lib/journal/types';
 
@@ -31,12 +32,16 @@
 		const path = await uploadJournalImage(file, entryId);
 		return signedUrlFor(path);
 	}
+	async function handleFile(file: File) {
+		const up = await uploadJournalFile(file, entryId);
+		return { src: await signedUrlFor(up.path), name: up.name, size: up.size, mime: up.mime };
+	}
 
 	async function save() {
 		saving = true;
 		try {
 			// doc is a Svelte $state proxy; snapshot to a plain object before cloning/serializing.
-			const body_json = withPathImages($state.snapshot(doc) as JournalDoc);
+			const body_json = withPathMedia($state.snapshot(doc) as JournalDoc);
 			if (entry) {
 				await updateEntry(entry.id, { title, body_json, mood, occurred_on: occurredOn });
 			} else {
@@ -66,7 +71,13 @@
 		</div>
 	</div>
 
-	<Editor content={doc} onUpdate={(d) => (doc = d)} onImageUpload={handleImage} />
+	<NotesEditor
+		content={doc}
+		onUpdate={(d) => (doc = d)}
+		onImageUpload={handleImage}
+		onFileUpload={handleFile}
+		placeholder="Write about your day, or press “/” for blocks…"
+	/>
 
 	<div class="flex gap-2">
 		<Button disabled={saving} onclick={save}>{saving ? 'Saving…' : 'Save entry'}</Button>
