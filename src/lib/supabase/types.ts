@@ -148,6 +148,42 @@ export type Database = {
         }
         Relationships: []
       }
+      journal_entries: {
+        Row: {
+          body_json: Json
+          body_text: string
+          created_at: string
+          id: string
+          mood: string | null
+          occurred_on: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body_json?: Json
+          body_text?: string
+          created_at?: string
+          id?: string
+          mood?: string | null
+          occurred_on: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          body_json?: Json
+          body_text?: string
+          created_at?: string
+          id?: string
+          mood?: string | null
+          occurred_on?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       links: {
         Row: {
           created_at: string

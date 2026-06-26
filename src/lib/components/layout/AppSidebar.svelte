@@ -13,7 +13,8 @@
 
 	const links = [
 		{ href: '/', label: 'Dashboard' },
-		{ href: '/finance', label: 'Finance' }
+		{ href: '/finance', label: 'Finance' },
+		{ href: '/journal', label: 'Journal' }
 	];
 </script>
 
