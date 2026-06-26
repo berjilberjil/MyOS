@@ -37,6 +37,77 @@ export async function moduleNodes(): Promise<ModuleNode[]> {
 	);
 }
 
+export type Vitality = 'good' | 'warn' | 'bad';
+
+export interface ModuleVital extends ModuleNode {
+	level: number; // 0..1 fill
+	state: Vitality;
+}
+
+// Soft "full tank" target per module — how much activity reads as a thriving area.
+const VITAL_TARGETS: Record<string, number> = {
+	finance: 30,
+	journal: 10,
+	todos: 12,
+	goals: 6,
+	health: 14,
+	fitness: 12,
+	notes: 10
+};
+
+// Liquid life-tanks: each module's fill + state from its activity vs target.
+// Full = water (thriving), mid = fuel (topping up), near-empty = fire (needs you).
+export async function moduleVitals(): Promise<ModuleVital[]> {
+	const nodes = await moduleNodes();
+	return nodes.map((n) => {
+		const target = VITAL_TARGETS[n.key] ?? 10;
+		const level = Math.max(0, Math.min(1, n.count / target));
+		const state: Vitality = level < 0.18 ? 'bad' : level < 0.5 ? 'warn' : 'good';
+		return { ...n, level, state };
+	});
+}
+
+export interface ModuleChild {
+	label: string;
+	href: string;
+}
+
+// Sub-areas revealed when a module node is expanded in the life map. These are
+// real facets of each module; clicking one navigates into that module.
+export const MODULE_CHILDREN: Record<string, ModuleChild[]> = {
+	finance: [
+		{ label: 'Accounts', href: '/finance' },
+		{ label: 'Transactions', href: '/finance' },
+		{ label: 'Budgets', href: '/finance' },
+		{ label: 'Savings', href: '/finance' },
+		{ label: 'Investments', href: '/finance' }
+	],
+	journal: [
+		{ label: 'Entries', href: '/journal' },
+		{ label: 'By mood', href: '/journal' }
+	],
+	todos: [
+		{ label: 'Active', href: '/todos' },
+		{ label: 'Completed', href: '/todos' }
+	],
+	goals: [
+		{ label: 'In progress', href: '/goals' },
+		{ label: 'Achieved', href: '/goals' }
+	],
+	health: [
+		{ label: 'Daily logs', href: '/health' },
+		{ label: 'Trends', href: '/health' }
+	],
+	fitness: [
+		{ label: 'Workouts', href: '/fitness' },
+		{ label: 'History', href: '/fitness' }
+	],
+	notes: [
+		{ label: 'Pinned', href: '/notes' },
+		{ label: 'All', href: '/notes' }
+	]
+};
+
 export interface GraphLink {
 	id: string;
 	source_type: string;
