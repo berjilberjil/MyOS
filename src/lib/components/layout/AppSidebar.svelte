@@ -18,7 +18,8 @@
 		{ href: '/todos', label: 'To-dos' },
 		{ href: '/goals', label: 'Goals' },
 		{ href: '/health', label: 'Health' },
-		{ href: '/fitness', label: 'Fitness' }
+		{ href: '/fitness', label: 'Fitness' },
+		{ href: '/notes', label: 'Notes' }
 	];
 </script>
 

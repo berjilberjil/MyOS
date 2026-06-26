@@ -373,6 +373,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notes: {
+        Row: {
+          body_json: Json
+          body_text: string
+          created_at: string
+          id: string
+          pinned: boolean
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body_json?: Json
+          body_text?: string
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          body_json?: Json
+          body_text?: string
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profile: {
         Row: {
           created_at: string
