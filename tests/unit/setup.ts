@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom/vitest';
+import 'fake-indexeddb/auto';
 
 // Node 25 ships an experimental global `localStorage` that shadows jsdom's and
 // lacks a working Storage API. Install a deterministic in-memory Storage so

@@ -22,17 +22,19 @@ export class SupabaseRepository<T extends { id: string }> implements Repository<
 	async get(id: string): Promise<T | null> {
 		const { data, error } = await this.db.from(this.table).select('*').eq('id', id).maybeSingle();
 		if (error) throw error;
-		return (data as T) ?? null;
+		return (data ?? null) as T | null;
 	}
 	async create(input: Partial<T>): Promise<T> {
-		const { data, error } = await this.db.from(this.table).insert(input).select().single();
+		// Cast at the supabase boundary: a generic wrapper over a dynamic table name
+		// can't be inferred by supabase-js, so it widens insert args to `never`.
+		const { data, error } = await this.db.from(this.table).insert(input as never).select().single();
 		if (error) throw error;
 		return data as T;
 	}
 	async update(id: string, patch: Partial<T>): Promise<T> {
 		const { data, error } = await this.db
 			.from(this.table)
-			.update(patch)
+			.update(patch as never)
 			.eq('id', id)
 			.select()
 			.single();
