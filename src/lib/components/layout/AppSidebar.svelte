@@ -14,7 +14,9 @@
 	const links = [
 		{ href: '/', label: 'Dashboard' },
 		{ href: '/finance', label: 'Finance' },
-		{ href: '/journal', label: 'Journal' }
+		{ href: '/journal', label: 'Journal' },
+		{ href: '/todos', label: 'To-dos' },
+		{ href: '/goals', label: 'Goals' }
 	];
 </script>
 
