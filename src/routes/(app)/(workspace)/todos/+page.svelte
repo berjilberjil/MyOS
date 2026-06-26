@@ -45,8 +45,6 @@
 </script>
 
 <div class="kn-stagger flex flex-col gap-4">
-	<h1 class="text-xl font-semibold tracking-tight">To-dos</h1>
-
 	<Card.Root>
 		<Card.Content class="flex flex-wrap items-end gap-2 pt-4">
 			<Input placeholder="What needs doing?" bind:value={title} class="w-64" />

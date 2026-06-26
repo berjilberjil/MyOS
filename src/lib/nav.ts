@@ -8,25 +8,32 @@ import HeartPulse from '@lucide/svelte/icons/heart-pulse';
 import Dumbbell from '@lucide/svelte/icons/dumbbell';
 import StickyNote from '@lucide/svelte/icons/sticky-note';
 import Waypoints from '@lucide/svelte/icons/waypoints';
+import SquareStack from '@lucide/svelte/icons/square-stack';
 
 export interface NavItem {
 	key: string;
 	href: string;
 	label: string;
 	icon: Component;
+	// Extra path prefixes that should also mark this item active (for grouped tabs).
+	match?: string[];
 }
 
 // Single source of truth for navigation + map iconography, so the sidebar and
 // the life map read as one system (same icon per module in both places).
+// Journal / Notes / To-dos / Goals are grouped under one "Workspace" tab.
 export const NAV: NavItem[] = [
 	{ key: 'dashboard', href: '/', label: 'Dashboard', icon: LayoutDashboard },
 	{ key: 'finance', href: '/finance', label: 'Finance', icon: Wallet },
-	{ key: 'journal', href: '/journal', label: 'Journal', icon: NotebookPen },
-	{ key: 'todos', href: '/todos', label: 'To-dos', icon: ListChecks },
-	{ key: 'goals', href: '/goals', label: 'Goals', icon: Target },
+	{
+		key: 'workspace',
+		href: '/journal',
+		label: 'Workspace',
+		icon: SquareStack,
+		match: ['/journal', '/notes', '/todos', '/goals']
+	},
 	{ key: 'health', href: '/health', label: 'Health', icon: HeartPulse },
 	{ key: 'fitness', href: '/fitness', label: 'Fitness', icon: Dumbbell },
-	{ key: 'notes', href: '/notes', label: 'Notes', icon: StickyNote },
 	{ key: 'mindmap', href: '/mindmap', label: 'Life map', icon: Waypoints }
 ];
 

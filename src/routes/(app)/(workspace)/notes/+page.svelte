@@ -8,8 +8,7 @@
 </script>
 
 <div class="kn-stagger flex flex-col gap-4">
-	<div class="flex items-center justify-between">
-		<h1 class="text-xl font-semibold tracking-tight">Notes</h1>
+	<div class="flex items-center justify-end">
 		<Button href="/notes/new">New note</Button>
 	</div>
 

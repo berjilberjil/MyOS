@@ -19,9 +19,11 @@
 		setTheme(next);
 	}
 
-	function isActive(href: string): boolean {
+	function isActive(item: { href: string; match?: string[] }): boolean {
 		const p = page.url.pathname;
-		return href === '/' ? p === '/' : p === href || p.startsWith(href + '/');
+		if (item.href === '/') return p === '/';
+		const paths = item.match ?? [item.href];
+		return paths.some((h) => p === h || p.startsWith(h + '/'));
 	}
 
 	let email = $state('');
@@ -42,7 +44,7 @@
 	<div class="kn-stagger mt-1 flex flex-col gap-0.5">
 		{#each NAV as item (item.href)}
 			{@const Icon = item.icon}
-			{@const active = isActive(item.href)}
+			{@const active = isActive(item)}
 			<a
 				href={item.href}
 				class="nav-link"
@@ -68,7 +70,7 @@
 		</Button>
 
 		<div class="profile-row">
-			<a class="profile" href="/profile" class:active={isActive('/profile')}>
+			<a class="profile" href="/profile" class:active={isActive({ href: '/profile' })}>
 				<span class="pf-avatar-wrap">
 					<img class="pf-avatar" src={profileState.avatar} alt={profileState.name} width="36" height="36" />
 					<span class="pf-dot" aria-hidden="true"></span>

@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { Editor } from '@tiptap/core';
+	import { Editor, wrappingInputRule } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
+	import { OrderedList } from '@tiptap/extension-list';
 	import Image from '@tiptap/extension-image';
 	import Placeholder from '@tiptap/extension-placeholder';
 	import TaskList from '@tiptap/extension-task-list';
@@ -66,7 +67,13 @@
 		editor = new Editor({
 			element,
 			extensions: [
-				StarterKit.configure({ link: { openOnClick: false, autolink: true } }),
+				StarterKit.configure({ link: { openOnClick: false, autolink: true }, orderedList: false }),
+				// Numbered lists always start at 1, regardless of the digit typed.
+				OrderedList.extend({
+					addInputRules() {
+						return [wrappingInputRule({ find: /^(\d+)\.\s$/, type: this.type })];
+					}
+				}),
 				Image,
 				TaskList,
 				TaskItem.configure({ nested: true }),

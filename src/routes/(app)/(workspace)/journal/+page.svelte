@@ -11,12 +11,10 @@
 </script>
 
 <div class="kn-stagger flex flex-col gap-4">
-	<div class="flex items-center justify-between">
-		<h1 class="text-xl font-semibold tracking-tight">Journal</h1>
+	<div class="flex items-center justify-between gap-2">
+		<MonthNav monthKey={month} onChange={(m) => (month = m)} />
 		<Button href="/journal/new">New entry</Button>
 	</div>
-
-	<MonthNav monthKey={month} onChange={(m) => (month = m)} />
 
 	<div class="flex flex-col gap-2">
 		{#each entries.data ?? [] as e (e.id)}

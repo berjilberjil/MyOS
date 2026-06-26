@@ -19,7 +19,6 @@
 </script>
 
 <div class="flex flex-col gap-4">
-	<h1 class="text-xl font-semibold tracking-tight">Edit entry</h1>
 	{#if entry.data}
 		{#key entry.data.id}
 			<EntryForm entry={entry.data} />
