@@ -19,7 +19,8 @@
 		{ href: '/goals', label: 'Goals' },
 		{ href: '/health', label: 'Health' },
 		{ href: '/fitness', label: 'Fitness' },
-		{ href: '/notes', label: 'Notes' }
+		{ href: '/notes', label: 'Notes' },
+		{ href: '/mindmap', label: 'Life map' }
 	];
 </script>
 
