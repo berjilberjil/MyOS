@@ -1,3 +1,4 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { supabaseBrowser } from '$lib/supabase/client';
 
 export interface Repository<T> {
@@ -10,8 +11,12 @@ export interface Repository<T> {
 
 export class SupabaseRepository<T extends { id: string }> implements Repository<T> {
 	constructor(private table: string) {}
-	private get db() {
-		return supabaseBrowser();
+
+	// A generic repository keyed by a dynamic table name can't be inferred against
+	// the strongly-typed client, so we access it as an untyped client internally.
+	// The public Repository<T> surface stays fully typed.
+	private get db(): SupabaseClient {
+		return supabaseBrowser() as unknown as SupabaseClient;
 	}
 
 	async list(): Promise<T[]> {
@@ -25,16 +30,16 @@ export class SupabaseRepository<T extends { id: string }> implements Repository<
 		return (data ?? null) as T | null;
 	}
 	async create(input: Partial<T>): Promise<T> {
-		// Cast at the supabase boundary: a generic wrapper over a dynamic table name
-		// can't be inferred by supabase-js, so it widens insert args to `never`.
-		const { data, error } = await this.db.from(this.table).insert(input as never).select().single();
+		const row = input as Record<string, unknown>;
+		const { data, error } = await this.db.from(this.table).insert(row).select().single();
 		if (error) throw error;
 		return data as T;
 	}
 	async update(id: string, patch: Partial<T>): Promise<T> {
+		const row = patch as Record<string, unknown>;
 		const { data, error } = await this.db
 			.from(this.table)
-			.update(patch as never)
+			.update(row)
 			.eq('id', id)
 			.select()
 			.single();

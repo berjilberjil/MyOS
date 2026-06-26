@@ -48,6 +48,11 @@ create policy "own media" on media_assets
 create policy "own links" on links
 	for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 
+-- PostgREST needs table-level privileges in addition to RLS. Grant to the
+-- `authenticated` role only — `anon` gets nothing (single-owner app). RLS still
+-- restricts every row to its owner.
+grant select, insert, update, delete on table profile, media_assets, links to authenticated;
+
 -- Private storage bucket for all media.
 insert into storage.buckets (id, name, public) values ('media', 'media', false)
 	on conflict (id) do nothing;
