@@ -38,7 +38,6 @@
 </script>
 
 <div class="kn-stagger flex flex-col gap-4">
-	<h1 class="text-xl font-semibold tracking-tight">Fitness</h1>
 
 	<Card.Root>
 		<Card.Header>

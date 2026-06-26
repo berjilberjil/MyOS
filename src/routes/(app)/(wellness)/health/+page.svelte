@@ -39,7 +39,6 @@
 </script>
 
 <div class="kn-stagger flex flex-col gap-4">
-	<h1 class="text-xl font-semibold tracking-tight">Health</h1>
 
 	{#if latestWeight?.weight_g != null}
 		<Card.Root>
