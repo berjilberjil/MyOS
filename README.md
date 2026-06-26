@@ -1,6 +1,10 @@
-# sv
+# MyOS
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+[![Netlify Status](https://api.netlify.com/api/v1/badges/f8a8366c-c47f-40a0-ab5f-91022224ed0d/deploy-status)](https://app.netlify.com/projects/idyllic-naiad-5c5acd/deploys)
+
+Personal life operating system — live at **[myos.berjiljacob.com](https://myos.berjiljacob.com)**. Auto-deploys from `master` via Netlify (badge above shows the latest deploy status; click it for full deploy logs).
+
+Built with SvelteKit + Svelte 5, powered by [`sv`](https://github.com/sveltejs/cli).
 
 ## Creating a project
 
