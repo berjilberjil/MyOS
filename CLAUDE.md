@@ -40,7 +40,7 @@ bun run test -- --run tests/unit/rls.test.ts tests/unit/finance-rls.test.ts
 Specs + plans in `docs/superpowers/`. Build order (each module = own brainstorm → spec → plan → build):
 
 1. ✅ **Phase 0 — Foundation** (DONE: scaffold, themes, primitives, app shell, Supabase+auth+RLS, data layer, offline sync, PWA)
-2. ⬜ **Phase 1 — Finance (MVP)** ← next. Accounts, categories+budgets, savings goals, recurring/salary, subscriptions, investments/SIPs, finance dashboard. (Adapts the monorepo content-studio dashboard flow.)
-3. ⬜ Journal (media) · 4. To-dos + Goals · 5. Health + Fitness · 6. Notes · 7. Mindmap life-dashboard (last — visualizes the rest via the `links` table).
+2. ✅ **Phase 1 — Finance (MVP)** (DONE: accounts, transactions, 3-second quick-add, categories+budgets, recurring/salary/subscriptions with on-open catch-up, savings goals, investments/SIPs, dashboard. Money in `src/lib/finance/` — pure calc + reconcile; charts in `src/lib/components/charts/`.)
+3. ⬜ **Phase 2 — Journal (media)** ← next. · 4. To-dos + Goals · 5. Health + Fitness · 6. Notes · 7. Mindmap life-dashboard (last — visualizes the rest via the `links` table).
 
-To continue: read `docs/superpowers/specs/2026-06-26-myos-design.md`, then brainstorm → write the Phase 1 Finance plan.
+To continue: pick the next module (Phase 2 — Journal), then brainstorm → spec → plan → build. Phase 1 artifacts: `docs/superpowers/specs/2026-06-26-phase1-finance-design.md` + `docs/superpowers/plans/2026-06-26-phase1-finance.md`.
