@@ -5,7 +5,7 @@
 const AVATAR_KEY = 'myos:avatar';
 const NAME_KEY = 'myos:name';
 
-export const DEFAULT_AVATAR = '/me.png';
+export const DEFAULT_AVATAR = '/me.webp';
 export const DEFAULT_NAME = 'Berjil';
 
 function read(key: string, fallback: string): string {
