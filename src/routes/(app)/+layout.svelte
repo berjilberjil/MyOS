@@ -2,6 +2,7 @@
 	import TwoColumnLayout from '$lib/components/layout/TwoColumnLayout.svelte';
 	import AppSidebar from '$lib/components/layout/AppSidebar.svelte';
 	import FloatingPanel from '$lib/components/layout/FloatingPanel.svelte';
+	import QuickAdd from '$lib/components/finance/QuickAdd.svelte';
 
 	let { children } = $props();
 </script>
@@ -18,3 +19,5 @@
 		</FloatingPanel>
 	{/snippet}
 </TwoColumnLayout>
+
+<QuickAdd />

@@ -16,6 +16,7 @@
 - **Privacy:** single owner. Every new table: RLS enabled, policy `user_id = auth.uid()` for all of select/insert/update/delete, `grant ... to authenticated` (never `anon`). Add an RLS isolation test for every new table.
 - **Data access:** go through `src/lib/finance/*` services (which wrap `SupabaseRepository<T>` from `src/lib/data/repository.ts`). Offline writes go through `enqueue()` in `src/lib/data/sync-queue.ts`.
 - **Component import convention:** `import * as Card from '$lib/components/ui/card'` then `<Card.Root>`. Class merge via `cn()` from `$lib/utils`.
+- **TanStack Query is the Svelte-5 runes adapter (v6).** `createQuery(() => ({...}))` / `createMutation(() => ({...}))` return reactive RESULT OBJECTS — access them directly: `accounts.data`, `save.isPending`, `save.mutate()`. **Do NOT use the `$store` prefix** (`$accounts.data` is wrong and fails type-check). The options argument must be a function returning the options object. (The component snippets below were drafted with the older `$`-store style — drop the `$` on query/mutation results when implementing; `$state`/`$derived`/`$props`/`$effect` are runes and stay.)
 - **Animations:** wrap list/section roots in `kn-stagger`; cards use existing entrance classes.
 - **Charts:** port as self-contained SVG Svelte components into `src/lib/components/charts/`. Do NOT import from the monorepo (read-only reference).
 - **Test commands:** `bun run test -- --run` (unit), `bun run check` (types), `bunx playwright test` (e2e). RLS test needs the local stack and `SUPABASE_ANON_KEY` (see CLAUDE.md).
