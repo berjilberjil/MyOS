@@ -83,7 +83,7 @@
 	let stx = 0;
 	let sty = 0;
 	function onPointerDown(e: PointerEvent) {
-		if ((e.target as HTMLElement).closest('[data-node]')) return;
+		if ((e.target as HTMLElement).closest('[data-node], .controls')) return;
 		dragging = true;
 		sx = e.clientX;
 		sy = e.clientY;
