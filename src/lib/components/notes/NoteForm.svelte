@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { toast } from 'svelte-sonner';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import NotesEditor from '$lib/notes/editor/NotesEditor.svelte';
 	import { createNote, updateNote, type Note } from '$lib/notes/notes';
@@ -54,6 +55,7 @@
 			saveState = 'saved';
 		} catch {
 			saveState = 'idle';
+			toast.error('Could not save note');
 		}
 	}
 
@@ -75,6 +77,7 @@
 	function share() {
 		navigator.clipboard?.writeText(`${location.origin}/notes/${savedId}`);
 		copied = true;
+		toast.success('Link copied to clipboard');
 		setTimeout(() => (copied = false), 1600);
 	}
 
@@ -85,7 +88,7 @@
 	}
 </script>
 
-<div class="mx-auto flex w-full max-w-3xl flex-col gap-4">
+<div class="flex w-full max-w-3xl flex-col gap-4">
 	<div class="no-print flex items-center justify-between gap-2">
 		<button class="chip" onclick={back}>
 			<ArrowLeft class="size-3.5" />

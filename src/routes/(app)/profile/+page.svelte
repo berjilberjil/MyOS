@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { toast } from 'svelte-sonner';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import * as Card from '$lib/components/ui/card';
@@ -40,8 +41,10 @@
 		try {
 			setAvatar(await fileToAvatar(file));
 			status = 'Photo updated.';
+			toast.success('Profile photo updated');
 		} catch (err) {
 			status = err instanceof Error ? err.message : 'Could not update photo.';
+			toast.error('Could not update photo');
 		}
 		busy = false;
 	}
@@ -49,12 +52,14 @@
 	function reset() {
 		resetAvatar();
 		status = 'Photo reset to default.';
+		toast.success('Photo reset to default');
 	}
 
 	function saveName() {
 		setName(name);
 		name = profileState.name;
 		status = 'Name saved.';
+		toast.success('Name saved');
 	}
 
 	const themes: { key: Theme; label: string }[] = [

@@ -18,6 +18,11 @@
 	.no-print {
 		display: none !important;
 	}
+	.notes-editor {
+		border: none !important;
+		background: none !important;
+		padding: 0 !important;
+	}
 	.notes-editor .ProseMirror {
 		min-height: 0 !important;
 	}

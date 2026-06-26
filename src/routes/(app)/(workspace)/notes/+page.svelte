@@ -4,6 +4,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { listNotes } from '$lib/notes/notes';
 	import { toCsv, downloadCsv } from '$lib/export/csv';
+	import { toast } from 'svelte-sonner';
 	import Download from '@lucide/svelte/icons/download';
 
 	const notes = createQuery(() => ({ queryKey: ['notes'], queryFn: () => listNotes() }));
@@ -25,6 +26,7 @@
 			`notes-${new Date().toISOString().slice(0, 10)}.csv`,
 			toCsv(['Title', 'Pinned', 'Updated', 'Body'], rows)
 		);
+		toast.success(`Exported ${rows.length} note${rows.length === 1 ? '' : 's'} to CSV`);
 	}
 </script>
 

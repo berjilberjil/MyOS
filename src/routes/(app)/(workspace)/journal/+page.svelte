@@ -6,6 +6,7 @@
 	import { monthKey, todayIso } from '$lib/finance/dates';
 	import { listByMonth } from '$lib/journal/entries';
 	import { toCsv, downloadCsv } from '$lib/export/csv';
+	import { toast } from 'svelte-sonner';
 	import Download from '@lucide/svelte/icons/download';
 
 	let month = $state(monthKey(todayIso()));
@@ -24,10 +25,8 @@
 		const rows = (entries.data ?? [])
 			.filter((e) => selected.has(e.id))
 			.map((e) => [e.title || 'Untitled', e.occurred_on, e.mood ?? '', e.body_text]);
-		downloadCsv(
-			`journal-${month}.csv`,
-			toCsv(['Title', 'Date', 'Mood', 'Body'], rows)
-		);
+		downloadCsv(`journal-${month}.csv`, toCsv(['Title', 'Date', 'Mood', 'Body'], rows));
+		toast.success(`Exported ${rows.length} entr${rows.length === 1 ? 'y' : 'ies'} to CSV`);
 	}
 </script>
 

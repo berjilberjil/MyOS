@@ -1,5 +1,9 @@
 .notes-editor {
 	position: relative;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-lg);
+	background: color-mix(in oklch, var(--foreground) 3.5%, var(--card));
+	padding: 1.1rem 1.35rem;
 }
 .notes-editor .ProseMirror {
 	min-height: 60vh;

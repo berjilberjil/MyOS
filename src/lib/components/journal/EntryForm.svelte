@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { toast } from 'svelte-sonner';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { Input } from '$lib/components/ui/input';
 	import { cn } from '$lib/utils';
@@ -56,6 +57,7 @@
 			saveState = 'saved';
 		} catch {
 			saveState = 'idle';
+			toast.error('Could not save entry');
 		}
 	}
 
@@ -80,7 +82,7 @@
 	}
 </script>
 
-<div class="mx-auto flex w-full max-w-3xl flex-col gap-3">
+<div class="flex w-full max-w-3xl flex-col gap-3">
 	<div class="no-print flex items-center justify-between gap-2">
 		<button class="chip" onclick={back}>
 			<ArrowLeft class="size-3.5" />
