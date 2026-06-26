@@ -109,6 +109,45 @@ export type Database = {
         }
         Relationships: []
       }
+      fitness_logs: {
+        Row: {
+          activity: string
+          calories: number | null
+          created_at: string
+          distance_m: number | null
+          duration_min: number
+          id: string
+          logged_on: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity: string
+          calories?: number | null
+          created_at?: string
+          distance_m?: number | null
+          duration_min?: number
+          id?: string
+          logged_on: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          activity?: string
+          calories?: number | null
+          created_at?: string
+          distance_m?: number | null
+          duration_min?: number
+          id?: string
+          logged_on?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       goals: {
         Row: {
           created_at: string
@@ -139,6 +178,45 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      health_logs: {
+        Row: {
+          created_at: string
+          id: string
+          logged_on: string
+          mood: string | null
+          notes: string | null
+          sleep_min: number | null
+          updated_at: string
+          user_id: string
+          water_ml: number | null
+          weight_g: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logged_on: string
+          mood?: string | null
+          notes?: string | null
+          sleep_min?: number | null
+          updated_at?: string
+          user_id?: string
+          water_ml?: number | null
+          weight_g?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logged_on?: string
+          mood?: string | null
+          notes?: string | null
+          sleep_min?: number | null
+          updated_at?: string
+          user_id?: string
+          water_ml?: number | null
+          weight_g?: number | null
         }
         Relationships: []
       }

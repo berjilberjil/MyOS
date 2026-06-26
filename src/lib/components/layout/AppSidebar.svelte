@@ -16,7 +16,9 @@
 		{ href: '/finance', label: 'Finance' },
 		{ href: '/journal', label: 'Journal' },
 		{ href: '/todos', label: 'To-dos' },
-		{ href: '/goals', label: 'Goals' }
+		{ href: '/goals', label: 'Goals' },
+		{ href: '/health', label: 'Health' },
+		{ href: '/fitness', label: 'Fitness' }
 	];
 </script>
 
