@@ -17,6 +17,22 @@ bun run dev              # http://localhost:5177
 ```
 Local dev owner (placeholder — change before real use): `owner@myos.local` / `ChangeMe!myos1`.
 
+## Desktop (macOS) + web
+One SvelteKit codebase, built as a static SPA (`adapter-static`, `ssr=false`); auth is client-side via Supabase.
+- Web dev: `bun run dev` (http://localhost:5177)
+- Mac app dev: `bun run tauri:dev` (native window; needs Rust + Xcode CLT — both installed)
+- Web build: `bun run build` → static `build/` (deploy to any static host)
+- Mac app build: `bun run tauri:build` → `src-tauri/target/release/bundle/` (`MyOS.app` + `MyOS_*.dmg`)
+- Tauri config: `src-tauri/tauri.conf.json` (window, icons, `com.berjil.myos`). Build artifacts in `src-tauri/target` (gitignored).
+
+### Cross-device sync (hosted Supabase)
+Local-first per device (Dexie cache + sync queue); a hosted Supabase project is the sync hub.
+1. Create a private Supabase cloud project.
+2. Apply migrations `0001`–`0006` (`supabase db push` to the linked project).
+3. Point `PUBLIC_SUPABASE_URL` / `PUBLIC_SUPABASE_ANON_KEY` at the cloud project in the build env.
+4. Seed the single owner via the admin API; enable MFA. RLS already restricts all data to the owner.
+Signing in on another Mac pulls the owner's data down and caches it locally.
+
 ## Test / verify
 ```bash
 bun run test -- --run    # Vitest unit suite
