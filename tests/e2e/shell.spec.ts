@@ -1,8 +1,21 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-test('shell renders and the theme toggle cycles + applies classes', async ({ page }) => {
-	await page.goto('/');
-	await expect(page.getByText('MyOS', { exact: true })).toBeVisible();
+// Local owner account created via admin API in Task 7.
+async function login(page: Page) {
+	await page.goto('/login');
+	await page.getByPlaceholder('email').fill('owner@myos.local');
+	await page.getByPlaceholder('password').fill('ChangeMe!myos1');
+	await page.getByRole('button', { name: 'Sign in' }).click();
+	// Lands on the guarded dashboard. Wait on the sidebar theme toggle, which only
+	// renders when authenticated (the login card title is also "MyOS").
+	await page.waitForURL((url) => !url.pathname.startsWith('/login'));
+	await expect(page.getByTestId('theme-toggle')).toBeVisible();
+}
+
+test('authenticated shell renders and the theme toggle cycles + applies classes', async ({
+	page
+}) => {
+	await login(page);
 
 	const toggle = page.getByTestId('theme-toggle');
 	await expect(toggle).toContainText('system');
