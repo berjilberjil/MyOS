@@ -10,6 +10,7 @@
 	import Pin from '@lucide/svelte/icons/pin';
 	import Link2 from '@lucide/svelte/icons/link';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Download from '@lucide/svelte/icons/download';
 
 	let { note }: { note?: Note } = $props();
 
@@ -85,7 +86,7 @@
 </script>
 
 <div class="mx-auto flex w-full max-w-3xl flex-col gap-4">
-	<div class="flex items-center justify-between gap-2">
+	<div class="no-print flex items-center justify-between gap-2">
 		<button class="chip" onclick={back}>
 			<ArrowLeft class="size-3.5" />
 			Back
@@ -98,6 +99,10 @@
 				<Pin class="size-3.5" />
 				{pinned ? 'Pinned' : 'Pin'}
 			</button>
+			<button class="chip" onclick={() => window.print()}>
+				<Download class="size-3.5" />
+				PDF
+			</button>
 			<button class="chip" onclick={share}>
 				<Link2 class="size-3.5" />
 				{copied ? 'Copied' : 'Share'}
@@ -105,17 +110,19 @@
 		</div>
 	</div>
 
-	<input class="title-input" placeholder="Untitled" bind:value={title} oninput={markDirty} />
+	<div class="print-area flex flex-col gap-4">
+		<input class="title-input" placeholder="Untitled" bind:value={title} oninput={markDirty} />
 
-	<NotesEditor
-		content={doc}
-		onUpdate={(d) => {
-			doc = d;
-			markDirty();
-		}}
-		onImageUpload={handleImage}
-		onFileUpload={handleFile}
-	/>
+		<NotesEditor
+			content={doc}
+			onUpdate={(d) => {
+				doc = d;
+				markDirty();
+			}}
+			onImageUpload={handleImage}
+			onFileUpload={handleFile}
+		/>
+	</div>
 </div>
 
 <style>

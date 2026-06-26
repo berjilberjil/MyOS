@@ -1,1 +1,31 @@
 @import './routes/layout.css';
+
+/* Print / "Download PDF": show only the marked region, drop app chrome. */
+@media print {
+	body * {
+		visibility: hidden;
+	}
+	.print-area,
+	.print-area * {
+		visibility: visible;
+	}
+	.print-area {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		padding: 0 0.5rem;
+	}
+	.no-print {
+		display: none !important;
+	}
+	.notes-editor .ProseMirror {
+		min-height: 0 !important;
+	}
+	.print-only {
+		display: block !important;
+		visibility: visible;
+	}
+}
+.print-only {
+	display: none;
+}

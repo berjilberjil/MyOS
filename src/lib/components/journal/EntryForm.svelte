@@ -11,6 +11,7 @@
 	import { todayIso } from '$lib/finance/dates';
 	import { MOODS, type JournalDoc, type JournalEntry } from '$lib/journal/types';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Download from '@lucide/svelte/icons/download';
 
 	let { entry }: { entry?: JournalEntry } = $props();
 
@@ -80,17 +81,23 @@
 </script>
 
 <div class="mx-auto flex w-full max-w-3xl flex-col gap-3">
-	<div class="flex items-center justify-between gap-2">
+	<div class="no-print flex items-center justify-between gap-2">
 		<button class="chip" onclick={back}>
 			<ArrowLeft class="size-3.5" />
 			Back
 		</button>
-		<span class="status">
-			{#if saveState === 'saving'}Saving…{:else if saveState === 'saved'}Saved{/if}
-		</span>
+		<div class="flex items-center gap-2">
+			<span class="status">
+				{#if saveState === 'saving'}Saving…{:else if saveState === 'saved'}Saved{/if}
+			</span>
+			<button class="chip" onclick={() => window.print()}>
+				<Download class="size-3.5" />
+				PDF
+			</button>
+		</div>
 	</div>
 
-	<div class="flex flex-wrap items-center gap-2">
+	<div class="no-print flex flex-wrap items-center gap-2">
 		<Input placeholder="Title" bind:value={title} oninput={markDirty} class="w-64" />
 		<Input type="date" bind:value={occurredOn} oninput={markDirty} class="w-40" />
 		<div class="flex gap-1">
@@ -108,16 +115,22 @@
 		</div>
 	</div>
 
-	<NotesEditor
-		content={doc}
-		onUpdate={(d) => {
-			doc = d;
-			markDirty();
-		}}
-		onImageUpload={handleImage}
-		onFileUpload={handleFile}
-		placeholder="Write about your day, or press “/” for blocks…"
-	/>
+	<div class="print-area flex flex-col gap-3">
+		<div class="print-only">
+			<h1 style="font-size:1.8rem;font-weight:700;margin:0;">{title || 'Untitled'}</h1>
+			<p style="color:#666;margin:.2rem 0 0;">{occurredOn}{mood ? ` · ${mood}` : ''}</p>
+		</div>
+		<NotesEditor
+			content={doc}
+			onUpdate={(d) => {
+				doc = d;
+				markDirty();
+			}}
+			onImageUpload={handleImage}
+			onFileUpload={handleFile}
+			placeholder="Write about your day, or press “/” for blocks…"
+		/>
+	</div>
 </div>
 
 <style>
