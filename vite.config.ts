@@ -16,6 +16,9 @@ export default defineConfig({
 		})
 	],
 	server: { port: 5177, strictPort: true },
+	// Resolve Svelte's browser entry when running component tests (Vitest sets VITEST),
+	// without affecting the SSR production build.
+	resolve: process.env.VITEST ? { conditions: ['browser'] } : undefined,
 	test: {
 		environment: 'jsdom',
 		include: ['tests/unit/**/*.test.ts'],
