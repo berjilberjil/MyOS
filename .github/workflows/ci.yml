@@ -9,6 +9,12 @@ jobs:
   check:
     name: Type-check & build
     runs-on: ubuntu-latest
+    # Dummy values so `svelte-kit sync` emits the $env/static/public exports and
+    # the build compiles. This is only a compile check — Netlify does the real
+    # deploy with the production env vars.
+    env:
+      PUBLIC_SUPABASE_URL: https://example.supabase.co
+      PUBLIC_SUPABASE_ANON_KEY: dummy-anon-key
     steps:
       - uses: actions/checkout@v4
 
@@ -24,8 +30,3 @@ jobs:
 
       - name: Build
         run: bun run build
-        # Dummy values — this build only verifies it compiles. The real deploy
-        # runs on Netlify with the production env vars.
-        env:
-          PUBLIC_SUPABASE_URL: https://example.supabase.co
-          PUBLIC_SUPABASE_ANON_KEY: dummy-anon-key
