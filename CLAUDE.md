@@ -2,7 +2,7 @@
 
 Private, daily-driver "operating system for my life": finance, journal, health, fitness, to-dos, goals, notes, and a mindmap dashboard that visualizes how everything connects. Single-user, privacy-first.
 
-Owner: **Berjil** — personal project. Commit + push as `Berjil <berjiljacob@gmail.com>`, GitHub `berjilberjil/MyOS` via the `github-personal` SSH remote (`git@github-personal:berjilberjil/MyOS.git`). **Never** commit as the work/`@skcript.com` identity here.
+Owner: **Berjil** — personal project. Commit + push as `berjilberjil <berjiljacob@gmail.com>`, GitHub `berjilberjil/MyOS` via the `github-personal` SSH remote (`git@github-personal:berjilberjil/MyOS.git`). **Never** commit as the work/`@skcript.com` identity here.
 
 ## Reference (read-only)
 `/Users/berjilskcript/Documents/monorepo` ("Knol", SvelteKit) is a **read-only reference** for theme/color/animation tokens and the content-studio interaction flow. **Never modify it.** Design tokens were ported into `src/routes/layout.css`.
