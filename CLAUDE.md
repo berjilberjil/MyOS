@@ -17,6 +17,22 @@ bun run dev              # http://localhost:5177
 ```
 Local dev owner (placeholder — change before real use): `owner@myos.local` / `ChangeMe!myos1`.
 
+## Desktop (macOS) + web
+One SvelteKit codebase, built as a static SPA (`adapter-static`, `ssr=false`); auth is client-side via Supabase.
+- Web dev: `bun run dev` (http://localhost:5177)
+- Mac app dev: `bun run tauri:dev` (native window; needs Rust + Xcode CLT — both installed)
+- Web build: `bun run build` → static `build/` (deploy to any static host)
+- Mac app build: `bun run tauri:build` → `src-tauri/target/release/bundle/` (`MyOS.app` + `MyOS_*.dmg`)
+- Tauri config: `src-tauri/tauri.conf.json` (window, icons, `com.berjil.myos`). Build artifacts in `src-tauri/target` (gitignored).
+
+### Cross-device sync (hosted Supabase)
+Local-first per device (Dexie cache + sync queue); a hosted Supabase project is the sync hub.
+1. Create a private Supabase cloud project.
+2. Apply migrations `0001`–`0006` (`supabase db push` to the linked project).
+3. Point `PUBLIC_SUPABASE_URL` / `PUBLIC_SUPABASE_ANON_KEY` at the cloud project in the build env.
+4. Seed the single owner via the admin API; enable MFA. RLS already restricts all data to the owner.
+Signing in on another Mac pulls the owner's data down and caches it locally.
+
 ## Test / verify
 ```bash
 bun run test -- --run    # Vitest unit suite
@@ -39,8 +55,12 @@ bun run test -- --run tests/unit/rls.test.ts tests/unit/finance-rls.test.ts
 ## Status & roadmap
 Specs + plans in `docs/superpowers/`. Build order (each module = own brainstorm → spec → plan → build):
 
-1. ✅ **Phase 0 — Foundation** (DONE: scaffold, themes, primitives, app shell, Supabase+auth+RLS, data layer, offline sync, PWA)
-2. ✅ **Phase 1 — Finance (MVP)** (DONE: accounts, transactions, 3-second quick-add, categories+budgets, recurring/salary/subscriptions with on-open catch-up, savings goals, investments/SIPs, dashboard. Money in `src/lib/finance/` — pure calc + reconcile; charts in `src/lib/components/charts/`.)
-3. ⬜ **Phase 2 — Journal (media)** ← next. · 4. To-dos + Goals · 5. Health + Fitness · 6. Notes · 7. Mindmap life-dashboard (last — visualizes the rest via the `links` table).
+1. ✅ **Phase 0 — Foundation** (scaffold, themes, primitives, app shell, Supabase+auth+RLS, data layer, offline sync, PWA)
+2. ✅ **Phase 1 — Finance** (accounts, transactions, 3-second quick-add, categories+budgets, recurring/subscriptions catch-up, savings goals, investments/SIPs, dashboard. `src/lib/finance/`.)
+3. ✅ **Phase 2 — Journal** (TipTap rich-text + media pipeline, mood/date, list/edit. `src/lib/journal/`.)
+4. ✅ **Phase 3 — To-dos + Goals** (priority/due todos, life goals lifecycle. `src/lib/planner/`.)
+5. ✅ **Phase 4 — Health + Fitness** (daily metrics + workouts, integer units g/m/min. `src/lib/health/`.)
+6. ✅ **Phase 5 — Notes** (rich-text notes + pin, shared TipTap editor. `src/lib/notes/`.)
+7. ✅ **Phase 6 — Mindmap life-dashboard** (SVG life map over module counts + `links`. `src/lib/mindmap/`.)
 
-To continue: pick the next module (Phase 2 — Journal), then brainstorm → spec → plan → build. Phase 1 artifacts: `docs/superpowers/specs/2026-06-26-phase1-finance-design.md` + `docs/superpowers/plans/2026-06-26-phase1-finance.md`.
+**All 7 phases complete.** Migrations `0001`–`0006`. Every module: own schema+RLS, pure-logic units tested, e2e per module. Next work = polish/iterate or extend a module; follow the same brainstorm → spec → plan → build cycle. Mindmap currently shows module branches; richer entity links accumulate via the `links` table as modules write to it.

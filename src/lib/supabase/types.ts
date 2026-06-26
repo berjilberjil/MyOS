@@ -109,6 +109,117 @@ export type Database = {
         }
         Relationships: []
       }
+      fitness_logs: {
+        Row: {
+          activity: string
+          calories: number | null
+          created_at: string
+          distance_m: number | null
+          duration_min: number
+          id: string
+          logged_on: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity: string
+          calories?: number | null
+          created_at?: string
+          distance_m?: number | null
+          duration_min?: number
+          id?: string
+          logged_on: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          activity?: string
+          calories?: number | null
+          created_at?: string
+          distance_m?: number | null
+          duration_min?: number
+          id?: string
+          logged_on?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      goals: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          status: string
+          target_date: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: string
+          target_date?: string | null
+          title: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: string
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      health_logs: {
+        Row: {
+          created_at: string
+          id: string
+          logged_on: string
+          mood: string | null
+          notes: string | null
+          sleep_min: number | null
+          updated_at: string
+          user_id: string
+          water_ml: number | null
+          weight_g: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logged_on: string
+          mood?: string | null
+          notes?: string | null
+          sleep_min?: number | null
+          updated_at?: string
+          user_id?: string
+          water_ml?: number | null
+          weight_g?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logged_on?: string
+          mood?: string | null
+          notes?: string | null
+          sleep_min?: number | null
+          updated_at?: string
+          user_id?: string
+          water_ml?: number | null
+          weight_g?: number | null
+        }
+        Relationships: []
+      }
       investments: {
         Row: {
           created_at: string
@@ -143,6 +254,42 @@ export type Database = {
           sip_amount_paise?: number | null
           sip_day?: number | null
           type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      journal_entries: {
+        Row: {
+          body_json: Json
+          body_text: string
+          created_at: string
+          id: string
+          mood: string | null
+          occurred_on: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body_json?: Json
+          body_text?: string
+          created_at?: string
+          id?: string
+          mood?: string | null
+          occurred_on: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          body_json?: Json
+          body_text?: string
+          created_at?: string
+          id?: string
+          mood?: string | null
+          occurred_on?: string
+          title?: string
           updated_at?: string
           user_id?: string
         }
@@ -223,6 +370,39 @@ export type Database = {
           thumbnail_path?: string | null
           user_id?: string
           width?: number | null
+        }
+        Relationships: []
+      }
+      notes: {
+        Row: {
+          body_json: Json
+          body_text: string
+          created_at: string
+          id: string
+          pinned: boolean
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body_json?: Json
+          body_text?: string
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          body_json?: Json
+          body_text?: string
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          title?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -372,6 +552,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      todos: {
+        Row: {
+          created_at: string
+          done: boolean
+          due_on: string | null
+          id: string
+          notes: string | null
+          priority: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          done?: boolean
+          due_on?: string | null
+          id?: string
+          notes?: string | null
+          priority?: number
+          title: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          done?: boolean
+          due_on?: string | null
+          id?: string
+          notes?: string | null
+          priority?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       transactions: {
         Row: {

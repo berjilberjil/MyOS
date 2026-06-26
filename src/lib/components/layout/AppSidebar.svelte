@@ -13,7 +13,14 @@
 
 	const links = [
 		{ href: '/', label: 'Dashboard' },
-		{ href: '/finance', label: 'Finance' }
+		{ href: '/finance', label: 'Finance' },
+		{ href: '/journal', label: 'Journal' },
+		{ href: '/todos', label: 'To-dos' },
+		{ href: '/goals', label: 'Goals' },
+		{ href: '/health', label: 'Health' },
+		{ href: '/fitness', label: 'Fitness' },
+		{ href: '/notes', label: 'Notes' },
+		{ href: '/mindmap', label: 'Life map' }
 	];
 </script>
 
