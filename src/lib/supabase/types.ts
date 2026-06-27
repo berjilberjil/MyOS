@@ -73,6 +73,45 @@ export type Database = {
         }
         Relationships: []
       }
+      belongings: {
+        Row: {
+          acquired_on: string | null
+          category: string
+          cost_paise: number | null
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          notes: string | null
+          qty: number
+          user_id: string
+        }
+        Insert: {
+          acquired_on?: string | null
+          category: string
+          cost_paise?: number | null
+          created_at?: string
+          id?: string
+          kind: string
+          name?: string
+          notes?: string | null
+          qty?: number
+          user_id?: string
+        }
+        Update: {
+          acquired_on?: string | null
+          category?: string
+          cost_paise?: number | null
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          notes?: string | null
+          qty?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string | null

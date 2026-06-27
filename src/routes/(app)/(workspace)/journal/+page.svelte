@@ -76,9 +76,8 @@
 </script>
 
 <div class="kn-stagger flex w-full flex-col gap-5">
-	<StreakHeader streak={result.current} todayDone={result.todayDone} {week} />
-
-	<div class="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
+	<div class="grid items-center gap-5 lg:grid-cols-2">
+		<StreakHeader streak={result.current} todayDone={result.todayDone} {week} />
 		<StreakCalendar
 			year={y}
 			month1={m}
@@ -88,58 +87,56 @@
 			onNext={nextMonth}
 			onPick={pickDay}
 		/>
+	</div>
 
-		<div class="flex min-w-0 flex-col gap-4">
-			<StreakStats
-				daysPracticed={practiced}
-				freezesUsed={result.freezesUsed}
-				streak={result.current}
-				streakGoal={settings.streak_goal}
-			/>
+	<StreakStats
+		daysPracticed={practiced}
+		freezesUsed={result.freezesUsed}
+		streak={result.current}
+		streakGoal={settings.streak_goal}
+	/>
 
-			<div class="flex items-center justify-between gap-2 pt-1">
-				<span class="text-sm font-semibold tracking-tight">Entries · {monthLabel}</span>
-				<div class="flex items-center gap-2">
-					{#if selected.size}
-						<Button variant="outline" size="sm" class="gap-1.5" onclick={exportCsv}>
-							<Download class="size-3.5" /> Export {selected.size}
-						</Button>
-					{/if}
-					<Button size="sm" onclick={() => pickDay(today)}>Today's entry</Button>
-				</div>
-			</div>
-
-			<div class="flex flex-col gap-2">
-				{#each entries.data ?? [] as e (e.id)}
-					<div class="relative">
-						<input
-							type="checkbox"
-							class="absolute left-3 top-4 z-10 size-4 cursor-pointer"
-							style="accent-color: var(--primary);"
-							checked={selected.has(e.id)}
-							onclick={(ev) => ev.stopPropagation()}
-							onchange={() => toggleSel(e.id)}
-							aria-label="Select entry"
-						/>
-						<a href="/journal/{e.id}">
-							<Card.Root class="transition-colors hover:bg-secondary/40">
-								<Card.Header>
-									<Card.Title class="pl-7 text-base">
-										{e.title || 'Untitled'}
-										{#if e.mood}<span class="ml-2 text-xs capitalize text-muted-foreground">· {e.mood}</span>{/if}
-									</Card.Title>
-									<Card.Description class="pl-7">{e.occurred_on}</Card.Description>
-								</Card.Header>
-								{#if e.body_text}
-									<Card.Content><p class="line-clamp-2 text-sm text-muted-foreground">{e.body_text}</p></Card.Content>
-								{/if}
-							</Card.Root>
-						</a>
-					</div>
-				{:else}
-					<p class="py-6 text-center text-sm text-muted-foreground">No entries this month. Tap a day to start.</p>
-				{/each}
-			</div>
+	<div class="flex items-center justify-between gap-2 pt-1">
+		<span class="text-sm font-semibold tracking-tight">Entries · {monthLabel}</span>
+		<div class="flex items-center gap-2">
+			{#if selected.size}
+				<Button variant="outline" size="sm" class="gap-1.5" onclick={exportCsv}>
+					<Download class="size-3.5" /> Export {selected.size}
+				</Button>
+			{/if}
+			<Button size="sm" onclick={() => pickDay(today)}>Today's entry</Button>
 		</div>
+	</div>
+
+	<div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+		{#each entries.data ?? [] as e (e.id)}
+			<div class="relative">
+				<input
+					type="checkbox"
+					class="absolute left-3 top-4 z-10 size-4 cursor-pointer"
+					style="accent-color: var(--primary);"
+					checked={selected.has(e.id)}
+					onclick={(ev) => ev.stopPropagation()}
+					onchange={() => toggleSel(e.id)}
+					aria-label="Select entry"
+				/>
+				<a href="/journal/{e.id}">
+					<Card.Root class="h-full transition-colors hover:bg-secondary/40">
+						<Card.Header>
+							<Card.Title class="pl-7 text-base">
+								{e.title || 'Untitled'}
+								{#if e.mood}<span class="ml-2 text-xs capitalize text-muted-foreground">· {e.mood}</span>{/if}
+							</Card.Title>
+							<Card.Description class="pl-7">{e.occurred_on}</Card.Description>
+						</Card.Header>
+						{#if e.body_text}
+							<Card.Content><p class="line-clamp-2 text-sm text-muted-foreground">{e.body_text}</p></Card.Content>
+						{/if}
+					</Card.Root>
+				</a>
+			</div>
+		{:else}
+			<p class="col-span-full py-6 text-center text-sm text-muted-foreground">No entries this month. Tap a day to start.</p>
+		{/each}
 	</div>
 </div>

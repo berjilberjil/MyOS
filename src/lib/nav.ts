@@ -10,6 +10,7 @@ import StickyNote from '@lucide/svelte/icons/sticky-note';
 import Waypoints from '@lucide/svelte/icons/waypoints';
 import SquareStack from '@lucide/svelte/icons/square-stack';
 import Activity from '@lucide/svelte/icons/activity';
+import Package from '@lucide/svelte/icons/package';
 
 export interface NavItem {
 	key: string;
@@ -40,6 +41,7 @@ export const NAV: NavItem[] = [
 		icon: Activity,
 		match: ['/fitness', '/health']
 	},
+	{ key: 'belongings', href: '/belongings', label: 'Belongings', icon: Package },
 	{ key: 'mindmap', href: '/mindmap', label: 'Life map', icon: Waypoints }
 ];
 
