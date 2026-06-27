@@ -1,5 +1,6 @@
 import { SupabaseStorageService } from '$lib/data/storage-service';
 import { SupabaseRepository } from '$lib/data/repository';
+import { compressImage } from '$lib/image';
 import { mapImageSrcs, pathFromSrc } from './text';
 import type { JournalDoc } from './types';
 
@@ -17,15 +18,16 @@ const mediaRepo = new SupabaseRepository<MediaAsset>('media_assets');
 
 // Upload an image for a journal entry. Returns the storage path (stored in the doc).
 export async function uploadJournalImage(file: File, entryId: string): Promise<string> {
-	const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+	const small = await compressImage(file);
+	const safe = small.name.replace(/[^a-zA-Z0-9._-]/g, '_');
 	const path = `journal/${entryId}/${crypto.randomUUID()}-${safe}`;
-	await storage.upload(file, path);
+	await storage.upload(small, path);
 	await mediaRepo.create({
 		owner_type: 'journal',
 		owner_id: entryId,
 		storage_path: path,
-		mime: file.type,
-		size_bytes: file.size
+		mime: small.type,
+		size_bytes: small.size
 	} as Partial<MediaAsset>);
 	return path;
 }

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { signedBelongingUrl } from './belongings';
+	import { openLightbox } from '$lib/stores/lightbox.svelte';
 	import ImageOff from '@lucide/svelte/icons/image-off';
 	let { path, alt = '' }: { path: string; alt?: string } = $props();
 
@@ -22,9 +23,9 @@
 {#if failed}
 	<div class="t fallback" title="Image unavailable"><ImageOff class="size-4" /></div>
 {:else if url}
-	<a class="t" href={url} target="_blank" rel="noopener" aria-label="Open photo">
-		<img src={url} {alt} loading="lazy" onerror={() => (failed = true)} />
-	</a>
+	<button class="t" onclick={() => openLightbox(url, alt)} aria-label="Open photo">
+		<img src={url} {alt} loading="lazy" decoding="async" onerror={() => (failed = true)} />
+	</button>
 {:else}
 	<div class="t skeleton"></div>
 {/if}
@@ -34,6 +35,10 @@
 		display: block;
 		height: 100%;
 		width: 100%;
+		padding: 0;
+		border: none;
+		background: none;
+		cursor: pointer;
 	}
 	img {
 		height: 100%;

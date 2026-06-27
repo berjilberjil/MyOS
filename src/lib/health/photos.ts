@@ -1,5 +1,6 @@
 import { SupabaseStorageService } from '$lib/data/storage-service';
 import { supabaseBrowser } from '$lib/supabase/client';
+import { compressImage } from '$lib/image';
 
 const storage = new SupabaseStorageService('media');
 
@@ -11,12 +12,13 @@ export interface ProgressPhoto {
 }
 
 export async function uploadFitnessPhoto(file: File): Promise<void> {
-	const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+	const small = await compressImage(file);
+	const safe = small.name.replace(/[^a-zA-Z0-9._-]/g, '_');
 	const path = `fitness/photos/${crypto.randomUUID()}-${safe}`;
-	await storage.upload(file, path);
+	await storage.upload(small, path);
 	const { error } = await supabaseBrowser()
 		.from('media_assets')
-		.insert({ owner_type: 'fitness_photo', storage_path: path, mime: file.type, size_bytes: file.size });
+		.insert({ owner_type: 'fitness_photo', storage_path: path, mime: small.type, size_bytes: small.size });
 	if (error) throw error;
 }
 

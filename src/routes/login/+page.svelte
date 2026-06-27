@@ -4,9 +4,12 @@
 	import { supabaseBrowser } from '$lib/supabase/client';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { profileState } from '$lib/stores/profile.svelte';
+	import Eye from '@lucide/svelte/icons/eye';
+	import EyeOff from '@lucide/svelte/icons/eye-off';
 
 	let email = $state('');
 	let password = $state('');
+	let showPw = $state(false);
 	let code = $state('');
 	let needMfa = $state(false);
 	let factorId = $state('');
@@ -71,10 +74,10 @@
 </svelte:head>
 
 <div class="auth">
-	<div class="dots" aria-hidden="true"></div>
-
-	<div class="split kn-enter">
-		<section class="welcome">
+	<!-- Left — colored brand panel -->
+	<section class="brandside">
+		<div class="dots" aria-hidden="true"></div>
+		<div class="brand-inner kn-enter">
 			<div class="float">
 				<img
 					class="ava"
@@ -88,9 +91,12 @@
 			</div>
 			<h1 class="greet">{hello},<br /><span class="name">{profileState.name}</span></h1>
 			<p class="sub">Welcome back to your OS.</p>
-		</section>
+		</div>
+	</section>
 
-		<section class="form-col">
+	<!-- Right — black form panel -->
+	<section class="formside">
+		<div class="formbox kn-enter">
 			<h2 class="form-title">{needMfa ? 'Verify it’s you' : 'Sign in'}</h2>
 			<p class="form-hint">
 				{needMfa ? 'Enter your authenticator code.' : 'Use your owner credentials.'}
@@ -99,13 +105,18 @@
 			<div class="form">
 				{#if !needMfa}
 					<Input bind:value={email} placeholder="email" type="email" autocomplete="username" />
-					<Input
-						bind:value={password}
-						placeholder="password"
-						type="password"
-						autocomplete="current-password"
-						onkeydown={(e) => e.key === 'Enter' && signIn()}
-					/>
+					<div class="pw">
+						<Input
+							bind:value={password}
+							placeholder="password"
+							type={showPw ? 'text' : 'password'}
+							autocomplete="current-password"
+							onkeydown={(e) => e.key === 'Enter' && signIn()}
+						/>
+						<button type="button" class="eye" onclick={() => (showPw = !showPw)} aria-label={showPw ? 'Hide password' : 'Show password'}>
+							{#if showPw}<EyeOff class="size-4" />{:else}<Eye class="size-4" />{/if}
+						</button>
+					</div>
 					<Button class="mt-1 w-full" disabled={busy} onclick={signIn}>
 						{busy ? 'Signing in…' : 'Sign in'}
 					</Button>
@@ -124,47 +135,44 @@
 			</div>
 
 			<p class="foot">Private · single-user</p>
-		</section>
-	</div>
+		</div>
+	</section>
 </div>
 
 <style>
 	.auth {
-		position: relative;
-		display: grid;
+		display: flex;
 		min-height: 100dvh;
-		place-items: center;
-		overflow: hidden;
-		padding: 1.5rem;
-		background: #000;
-	}
-	.dots {
-		position: fixed;
-		inset: 0;
-		z-index: 0;
-		background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1.5px);
-		background-size: 24px 24px;
-	}
-
-	.split {
-		position: relative;
-		z-index: 1;
-		display: grid;
-		width: 100%;
-		max-width: 56rem;
-		grid-template-columns: 1fr;
-		gap: 2.5rem;
-		align-items: center;
+		flex-direction: column;
 	}
 	@media (min-width: 768px) {
-		.split {
-			grid-template-columns: 1.05fr 1fr;
-			gap: 0;
+		.auth {
+			flex-direction: row;
 		}
 	}
 
-	/* Left — welcome + avatar */
-	.welcome {
+	/* Left — colored */
+	.brandside {
+		position: relative;
+		display: grid;
+		place-items: center;
+		overflow: hidden;
+		padding: 2.5rem 1.5rem;
+		background: linear-gradient(155deg, #1d4ed8 0%, #2563eb 45%, #06b6d4 100%);
+	}
+	@media (min-width: 768px) {
+		.brandside {
+			flex: 1.1;
+		}
+	}
+	.dots {
+		position: absolute;
+		inset: 0;
+		background-image: radial-gradient(circle, rgba(255, 255, 255, 0.16) 1px, transparent 1.5px);
+		background-size: 24px 24px;
+	}
+	.brand-inner {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -172,10 +180,9 @@
 		gap: 0.5rem;
 	}
 	@media (min-width: 768px) {
-		.welcome {
+		.brand-inner {
 			align-items: flex-start;
 			text-align: left;
-			padding-right: 3rem;
 		}
 	}
 	.float {
@@ -183,39 +190,41 @@
 	}
 	.ava {
 		display: block;
-		height: 200px;
-		width: 200px;
+		height: clamp(130px, 22vw, 200px);
+		width: clamp(130px, 22vw, 200px);
 		object-fit: contain;
-		filter: drop-shadow(0 18px 32px rgb(0 0 0 / 0.6));
+		filter: drop-shadow(0 18px 32px rgb(0 0 0 / 0.45));
 	}
 	.greet {
-		font-size: clamp(1.7rem, 4vw, 2.4rem);
-		font-weight: 600;
-		line-height: 1.1;
+		margin-top: 0.5rem;
+		font-size: clamp(1.8rem, 4vw, 2.6rem);
+		font-weight: 700;
+		line-height: 1.05;
 		letter-spacing: -0.02em;
 		color: #fff;
-		margin-top: 0.5rem;
 	}
 	.greet .name {
-		color: var(--primary);
+		color: rgb(255 255 255 / 0.78);
 	}
 	.sub {
 		font-size: var(--text-sm);
-		color: rgb(255 255 255 / 0.55);
+		color: rgb(255 255 255 / 0.75);
 	}
 
-	/* Right — form */
-	.form-col {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		gap: 0.6rem;
+	/* Right — black */
+	.formside {
+		display: grid;
+		flex: 1;
+		place-items: center;
+		padding: 2.5rem 1.5rem;
+		background: #000;
 	}
-	@media (min-width: 768px) {
-		.form-col {
-			border-left: 1px solid rgb(255 255 255 / 0.1);
-			padding-left: 3rem;
-		}
+	.formbox {
+		display: flex;
+		width: 100%;
+		max-width: 22rem;
+		flex-direction: column;
+		gap: 0.6rem;
 	}
 	.form-title {
 		font-size: var(--text-xl);
@@ -232,6 +241,25 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.6rem;
+	}
+	.pw {
+		position: relative;
+	}
+	.eye {
+		position: absolute;
+		right: 8px;
+		top: 50%;
+		display: grid;
+		height: 28px;
+		width: 28px;
+		transform: translateY(-50%);
+		place-items: center;
+		border-radius: var(--radius-md);
+		color: rgb(255 255 255 / 0.55);
+	}
+	.eye:hover {
+		color: #fff;
+		background: rgb(255 255 255 / 0.08);
 	}
 	.err {
 		font-size: var(--text-sm);

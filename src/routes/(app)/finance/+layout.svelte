@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { page } from '$app/state';
 	import { cn } from '$lib/utils';
 	import { seedDefaultCategories } from '$lib/finance/categories';
 	import { reconcileAll } from '$lib/finance/accounts';
 	import { runCatchUp } from '$lib/finance/recurring';
+	import { setHeaderTabs, clearHeaderTabs } from '$lib/stores/headerTabs.svelte';
 
 	let { children } = $props();
 
@@ -18,6 +19,10 @@
 		{ href: '/finance/investments', label: 'Investments' }
 	];
 
+	// Desktop: tabs in the top bar. Phones: keep the in-content row below.
+	setHeaderTabs(tabs);
+	onDestroy(clearHeaderTabs);
+
 	onMount(async () => {
 		if (!navigator.onLine) return;
 		await seedDefaultCategories();
@@ -27,7 +32,7 @@
 </script>
 
 <div class="kn-stagger flex flex-col gap-4">
-	<nav class="flex flex-wrap gap-1 border-b border-border pb-2">
+	<nav class="flex flex-wrap gap-1 border-b border-border pb-2 md:hidden">
 		{#each tabs as t (t.href)}
 			<a
 				href={t.href}

@@ -1,5 +1,6 @@
 import { supabaseBrowser } from '$lib/supabase/client';
 import { SupabaseStorageService } from '$lib/data/storage-service';
+import { compressImage } from '$lib/image';
 
 const storage = new SupabaseStorageService('media');
 
@@ -40,9 +41,10 @@ export async function listBelongings(): Promise<Belonging[]> {
 }
 
 export async function uploadBelongingImage(file: File): Promise<string> {
-	const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+	const small = await compressImage(file);
+	const safe = small.name.replace(/[^a-zA-Z0-9._-]/g, '_');
 	const path = `belongings/${crypto.randomUUID()}-${safe}`;
-	await storage.upload(file, path);
+	await storage.upload(small, path);
 	return path;
 }
 

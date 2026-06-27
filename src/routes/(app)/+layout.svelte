@@ -1,6 +1,7 @@
 <script lang="ts">
 	import AppTopBar from '$lib/components/layout/MobileTopBar.svelte';
 	import BottomNav from '$lib/components/layout/MobileNav.svelte';
+	import Lightbox from '$lib/components/Lightbox.svelte';
 	import QuickAdd from '$lib/components/finance/QuickAdd.svelte';
 	import { onMount } from 'svelte';
 	import { useQueryClient } from '@tanstack/svelte-query';
@@ -8,21 +9,26 @@
 	import { notify, notifyEnabled } from '$lib/notify';
 	import { loggedJournalDates } from '$lib/streak/data';
 	import { localToday } from '$lib/streak/streak';
+	import { listTodos } from '$lib/planner/todos';
 
 	let { children } = $props();
 
 	const qc = useQueryClient();
 	onMount(() => {
 		const stop = initFinanceSync(() => qc.invalidateQueries({ queryKey: ['finance'] }));
-		// Daily journal nudge, at most once per day.
+		// One combined daily reminder (journal streak + to-dos due), at most once a day.
 		if (notifyEnabled()) {
 			const today = localToday(new Date());
 			if (localStorage.getItem('notify-last') !== today) {
-				loggedJournalDates(today)
-					.then((logged) => {
-						if (!logged.has(today)) {
+				Promise.all([loggedJournalDates(today), listTodos()])
+					.then(([logged, todos]) => {
+						const parts: string[] = [];
+						if (!logged.has(today)) parts.push("write today's journal");
+						const due = todos.filter((t) => !t.done && t.due_on && t.due_on <= today).length;
+						if (due) parts.push(`${due} to-do${due > 1 ? 's' : ''} due`);
+						if (parts.length) {
 							setTimeout(() => {
-								notify('MyOS', "Write today's journal to keep your streak alive 🔥");
+								notify('MyOS reminder', `Don't forget: ${parts.join(' · ')} 🔥`);
 								localStorage.setItem('notify-last', today);
 							}, 4000);
 						}
@@ -48,3 +54,4 @@
 
 <BottomNav />
 <QuickAdd />
+<Lightbox />

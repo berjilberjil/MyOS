@@ -1,5 +1,6 @@
 import { SupabaseStorageService } from '$lib/data/storage-service';
 import { SupabaseRepository } from '$lib/data/repository';
+import { compressImage } from '$lib/image';
 import { pathFromSrc } from '$lib/journal/text';
 import type { JournalDoc } from '$lib/journal/types';
 
@@ -38,7 +39,7 @@ async function put(file: File, noteId: string): Promise<string> {
 
 // Image upload returns the bare storage path (written into the image node src).
 export async function uploadNoteImage(file: File, noteId: string): Promise<string> {
-	return put(file, noteId);
+	return put(await compressImage(file), noteId);
 }
 
 // File (PDF/etc.) upload returns path + display metadata for the file block.

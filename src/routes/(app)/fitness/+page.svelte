@@ -12,6 +12,7 @@
 	import { listFitnessPhotos, uploadFitnessPhoto, deleteFitnessPhoto } from '$lib/health/photos';
 	import WeightChart from '$lib/health/WeightChart.svelte';
 	import { toast } from 'svelte-sonner';
+	import { openLightbox } from '$lib/stores/lightbox.svelte';
 	import Camera from '@lucide/svelte/icons/camera';
 	import X from '@lucide/svelte/icons/x';
 
@@ -175,9 +176,9 @@
 				<div class="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
 					{#each photos.data ?? [] as p (p.id)}
 						<div class="photo">
-							<a href={p.url} target="_blank" rel="noopener">
-								<img src={p.url} alt="Progress {p.created_at.slice(0, 10)}" loading="lazy" />
-							</a>
+							<button class="photo-open" onclick={() => openLightbox(p.url, 'Progress photo')} aria-label="View photo">
+								<img src={p.url} alt="Progress {p.created_at.slice(0, 10)}" loading="lazy" decoding="async" />
+							</button>
 							<span class="photo-date">{p.created_at.slice(0, 10)}</span>
 							<button class="photo-x" onclick={() => removePhoto(p.id, p.path)} aria-label="Delete photo">
 								<X class="size-3.5" />
@@ -273,10 +274,14 @@
 		border-radius: var(--radius-md);
 		border: 1px solid var(--border);
 	}
-	.photo a {
+	.photo-open {
 		display: block;
 		height: 100%;
 		width: 100%;
+		padding: 0;
+		border: none;
+		background: none;
+		cursor: pointer;
 	}
 	.photo img {
 		height: 100%;

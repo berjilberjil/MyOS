@@ -6,7 +6,11 @@
 
 	function active(href: string): boolean {
 		const p = page.url.pathname;
-		return p === href || p.startsWith(href + '/');
+		const matches = headerTabs.tabs.filter((t) => p === t.href || p.startsWith(t.href + '/'));
+		if (!matches.length) return false;
+		// Longest matching href wins, so /finance doesn't stay lit on /finance/transactions.
+		const best = matches.reduce((a, b) => (b.href.length > a.href.length ? b : a));
+		return best.href === href;
 	}
 </script>
 
