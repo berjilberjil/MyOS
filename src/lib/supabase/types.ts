@@ -80,6 +80,7 @@ export type Database = {
           cost_paise: number | null
           created_at: string
           id: string
+          image_path: string | null
           kind: string
           name: string
           notes: string | null
@@ -92,6 +93,7 @@ export type Database = {
           cost_paise?: number | null
           created_at?: string
           id?: string
+          image_path?: string | null
           kind: string
           name?: string
           notes?: string | null
@@ -104,6 +106,7 @@ export type Database = {
           cost_paise?: number | null
           created_at?: string
           id?: string
+          image_path?: string | null
           kind?: string
           name?: string
           notes?: string | null
