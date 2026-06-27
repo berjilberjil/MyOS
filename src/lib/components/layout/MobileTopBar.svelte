@@ -12,7 +12,7 @@
 	}
 </script>
 
-<header class="mtop md:hidden">
+<header class="mtop">
 	<a href="/" class="brand">MyOS</a>
 	<div class="actions">
 		<button onclick={cycle} aria-label="Switch theme" class="icon-btn"><Palette class="size-[18px]" /></button>
@@ -28,14 +28,21 @@
 		top: 0;
 		z-index: 30;
 		display: flex;
+		flex-shrink: 0;
 		align-items: center;
 		justify-content: space-between;
 		height: 52px;
-		padding: 0 12px;
+		padding: 0 14px;
 		padding-top: env(safe-area-inset-top);
 		border-bottom: 1px solid var(--border);
 		background: color-mix(in oklch, var(--card) 88%, transparent);
 		backdrop-filter: blur(14px);
+	}
+	@media (min-width: 768px) {
+		.mtop {
+			height: 56px;
+			padding-inline: 24px;
+		}
 	}
 	.brand {
 		font-size: var(--text-base);
