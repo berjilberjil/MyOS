@@ -17,7 +17,7 @@ const MODULES: { key: string; label: string; href: string; tables: string[] }[] 
 	{ key: 'journal', label: 'Journal', href: '/journal', tables: ['journal_entries'] },
 	{ key: 'todos', label: 'To-dos', href: '/todos', tables: ['todos'] },
 	{ key: 'goals', label: 'Goals', href: '/goals', tables: ['goals'] },
-	{ key: 'health', label: 'Health', href: '/health', tables: ['health_logs'] },
+	{ key: 'health', label: 'Health', href: '/fitness', tables: ['health_logs'] },
 	{ key: 'fitness', label: 'Fitness', href: '/fitness', tables: ['fitness_logs'] },
 	{ key: 'notes', label: 'Notes', href: '/notes', tables: ['notes'] }
 ];
@@ -95,8 +95,8 @@ export const MODULE_CHILDREN: Record<string, ModuleChild[]> = {
 		{ label: 'Achieved', href: '/goals' }
 	],
 	health: [
-		{ label: 'Daily logs', href: '/health' },
-		{ label: 'Trends', href: '/health' }
+		{ label: 'Daily logs', href: '/fitness' },
+		{ label: 'Trends', href: '/fitness' }
 	],
 	fitness: [
 		{ label: 'Workouts', href: '/fitness' },

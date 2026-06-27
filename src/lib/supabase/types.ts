@@ -553,6 +553,30 @@ export type Database = {
           },
         ]
       }
+      streak_settings: {
+        Row: {
+          created_at: string
+          freezes_total: number
+          streak_goal: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          freezes_total?: number
+          streak_goal?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          freezes_total?: number
+          streak_goal?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       todos: {
         Row: {
           created_at: string

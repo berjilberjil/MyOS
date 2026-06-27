@@ -34,11 +34,11 @@ export const NAV: NavItem[] = [
 		match: ['/journal', '/notes', '/todos', '/goals']
 	},
 	{
-		key: 'wellness',
-		href: '/health',
-		label: 'Wellness',
+		key: 'fitness',
+		href: '/fitness',
+		label: 'Fitness',
 		icon: Activity,
-		match: ['/health', '/fitness']
+		match: ['/fitness', '/health']
 	},
 	{ key: 'mindmap', href: '/mindmap', label: 'Life map', icon: Waypoints }
 ];

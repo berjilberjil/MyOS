@@ -14,7 +14,7 @@
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Download from '@lucide/svelte/icons/download';
 
-	let { entry }: { entry?: JournalEntry } = $props();
+	let { entry, date }: { entry?: JournalEntry; date?: string } = $props();
 
 	const qc = useQueryClient();
 	const entryId = entry?.id ?? crypto.randomUUID();
@@ -24,7 +24,7 @@
 	/* svelte-ignore state_referenced_locally */
 	let mood = $state<string | null>(entry?.mood ?? null);
 	/* svelte-ignore state_referenced_locally */
-	let occurredOn = $state(entry?.occurred_on ?? todayIso());
+	let occurredOn = $state(entry?.occurred_on ?? date ?? todayIso());
 	/* svelte-ignore state_referenced_locally */
 	let doc = $state<JournalDoc>(entry?.body_json ?? { type: 'doc', content: [] });
 
