@@ -340,6 +340,7 @@
 		position: absolute;
 		right: 2px;
 		top: 2px;
+		z-index: 2;
 		display: grid;
 		height: 18px;
 		width: 18px;
