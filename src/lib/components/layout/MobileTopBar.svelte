@@ -1,25 +1,29 @@
 <script lang="ts">
-	import { setTheme, themeState, type Theme } from '$lib/stores/theme.svelte';
+	import { page } from '$app/state';
 	import { profileState } from '$lib/stores/profile.svelte';
-	import Palette from '@lucide/svelte/icons/palette';
+	import { headerTabs } from '$lib/stores/headerTabs.svelte';
+	import { cn } from '$lib/utils';
 
-	const themes: Theme[] = ['light', 'dark', 'system'];
-	function cycle() {
-		const i = themes.indexOf(themeState.current);
-		const next = themes[(i + 1) % themes.length];
-		themeState.current = next;
-		setTheme(next);
+	function active(href: string): boolean {
+		const p = page.url.pathname;
+		return p === href || p.startsWith(href + '/');
 	}
 </script>
 
 <header class="mtop">
-	<a href="/" class="brand">MyOS</a>
-	<div class="actions">
-		<button onclick={cycle} aria-label="Switch theme" class="icon-btn"><Palette class="size-[18px]" /></button>
-		<a href="/profile" class="avatar-link" aria-label="Profile">
-			<img src={profileState.avatar} alt={profileState.name} width="30" height="30" />
-		</a>
+	<div class="left">
+		<a href="/" class="brand">MyOS</a>
+		{#if headerTabs.tabs.length}
+			<nav class="tabs" aria-label="Section">
+				{#each headerTabs.tabs as t (t.href)}
+					<a href={t.href} class={cn('tab', active(t.href) && 'on')}>{t.label}</a>
+				{/each}
+			</nav>
+		{/if}
 	</div>
+	<a href="/profile" class="avatar-link" aria-label="Profile">
+		<img src={profileState.avatar} alt={profileState.name} width="30" height="30" />
+	</a>
 </header>
 
 <style>
@@ -31,6 +35,7 @@
 		flex-shrink: 0;
 		align-items: center;
 		justify-content: space-between;
+		gap: 1rem;
 		height: 52px;
 		padding: 0 14px;
 		padding-top: env(safe-area-inset-top);
@@ -44,28 +49,47 @@
 			padding-inline: 24px;
 		}
 	}
+	.left {
+		display: flex;
+		min-width: 0;
+		align-items: center;
+		gap: 1.25rem;
+	}
 	.brand {
+		flex-shrink: 0;
 		font-size: var(--text-base);
 		font-weight: 700;
 		letter-spacing: -0.01em;
 		color: var(--foreground);
 		text-decoration: none;
 	}
-	.actions {
-		display: flex;
+	/* Section sub-tabs live in the header on desktop; pages keep their own on mobile. */
+	.tabs {
+		display: none;
 		align-items: center;
-		gap: 6px;
+		gap: 0.25rem;
 	}
-	.icon-btn {
-		display: grid;
-		height: 34px;
-		width: 34px;
-		place-items: center;
-		border-radius: 9999px;
+	@media (min-width: 768px) {
+		.tabs {
+			display: flex;
+		}
+	}
+	.tab {
+		border-radius: var(--radius-md);
+		padding: 0.3rem 0.7rem;
+		font-size: var(--text-sm);
 		color: var(--muted-foreground);
+		text-decoration: none;
+		transition: background-color var(--duration-fast) ease, color var(--duration-fast) ease;
 	}
-	.icon-btn:active {
-		background: var(--accent);
+	.tab:hover {
+		background: var(--secondary);
+		color: var(--foreground);
+	}
+	.tab.on {
+		background: var(--secondary);
+		font-weight: 500;
+		color: var(--secondary-foreground);
 	}
 	.avatar-link img {
 		height: 30px;

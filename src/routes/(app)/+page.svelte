@@ -37,7 +37,7 @@
 	const fitnessQ = createQuery(() => ({ queryKey: ['fitness'], queryFn: () => recentFitness(60) }));
 	const belongingsQ = createQuery(() => ({ queryKey: ['belongings'], queryFn: () => listBelongings() }));
 	const streakQ = createQuery(() => ({
-		queryKey: ['streak'],
+		queryKey: ['dashboard', 'streak'],
 		queryFn: async () => {
 			const [logged, settings] = await Promise.all([loggedJournalDates(today), getStreakSettings()]);
 			return computeStreak(logged, today, settings.freezes_total).current;

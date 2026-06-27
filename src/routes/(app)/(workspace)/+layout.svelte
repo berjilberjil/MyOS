@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import { page } from '$app/state';
 	import { cn } from '$lib/utils';
+	import { setHeaderTabs, clearHeaderTabs } from '$lib/stores/headerTabs.svelte';
 
 	let { children } = $props();
 
@@ -11,6 +13,10 @@
 		{ href: '/goals', label: 'Goals' }
 	];
 
+	// Publish to the desktop top bar; keep an in-content row for phones.
+	setHeaderTabs(tabs);
+	onDestroy(clearHeaderTabs);
+
 	function active(href: string): boolean {
 		const p = page.url.pathname;
 		return p === href || p.startsWith(href + '/');
@@ -18,7 +24,7 @@
 </script>
 
 <div class="flex h-full flex-col gap-4">
-	<nav class="flex shrink-0 flex-wrap gap-1 border-b border-border pb-2">
+	<nav class="flex shrink-0 flex-wrap gap-1 border-b border-border pb-2 md:hidden">
 		{#each tabs as t (t.href)}
 			<a
 				href={t.href}

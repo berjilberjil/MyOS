@@ -18,7 +18,9 @@
 	import Camera from '@lucide/svelte/icons/camera';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import LogOut from '@lucide/svelte/icons/log-out';
+	import Bell from '@lucide/svelte/icons/bell';
 	import { getPersonal, savePersonal, BLOOD_GROUPS, EMPTY_PERSONAL, type Personal } from '$lib/profile/personal';
+	import { enableNotifications, disableNotifications, notifyEnabled, notifySupported } from '$lib/notify';
 
 	let fileEl: HTMLInputElement;
 	let name = $state('');
@@ -29,12 +31,29 @@
 	let personal = $state<Personal>({ ...EMPTY_PERSONAL });
 	let savingPersonal = $state(false);
 
+	let notifSupported = $state(true);
+	let notifOn = $state(false);
+
 	onMount(async () => {
 		name = profileState.name;
+		notifSupported = notifySupported();
+		notifOn = notifyEnabled();
 		const { data } = await supabaseBrowser().auth.getUser();
 		email = data.user?.email ?? '';
 		personal = await getPersonal();
 	});
+
+	async function turnOnNotif() {
+		const ok = await enableNotifications();
+		notifOn = ok;
+		if (ok) toast.success('Reminders on');
+		else toast.error('Permission denied — allow notifications in your browser');
+	}
+	function turnOffNotif() {
+		disableNotifications();
+		notifOn = false;
+		toast.success('Reminders off');
+	}
 
 	async function savePersonalData() {
 		savingPersonal = true;
@@ -219,6 +238,23 @@
 					{t.label}
 				</Button>
 			{/each}
+		</Card.Content>
+	</Card.Root>
+
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>Notifications</Card.Title>
+			<Card.Description>A daily browser nudge to keep your journal streak alive.</Card.Description>
+		</Card.Header>
+		<Card.Content class="flex flex-wrap items-center gap-3">
+			{#if !notifSupported}
+				<p class="text-sm text-muted-foreground">This browser doesn't support notifications.</p>
+			{:else if notifOn}
+				<span class="flex items-center gap-1.5 text-sm text-primary"><Bell class="size-4" /> Enabled</span>
+				<Button variant="outline" size="sm" onclick={turnOffNotif}>Turn off</Button>
+			{:else}
+				<Button size="sm" class="gap-2" onclick={turnOnNotif}><Bell class="size-4" /> Enable reminders</Button>
+			{/if}
 		</Card.Content>
 	</Card.Root>
 

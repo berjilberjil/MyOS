@@ -5,11 +5,33 @@
 	import { onMount } from 'svelte';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { initFinanceSync } from '$lib/finance/sync';
+	import { notify, notifyEnabled } from '$lib/notify';
+	import { loggedJournalDates } from '$lib/streak/data';
+	import { localToday } from '$lib/streak/streak';
 
 	let { children } = $props();
 
 	const qc = useQueryClient();
-	onMount(() => initFinanceSync(() => qc.invalidateQueries({ queryKey: ['finance'] })));
+	onMount(() => {
+		const stop = initFinanceSync(() => qc.invalidateQueries({ queryKey: ['finance'] }));
+		// Daily journal nudge, at most once per day.
+		if (notifyEnabled()) {
+			const today = localToday(new Date());
+			if (localStorage.getItem('notify-last') !== today) {
+				loggedJournalDates(today)
+					.then((logged) => {
+						if (!logged.has(today)) {
+							setTimeout(() => {
+								notify('MyOS', "Write today's journal to keep your streak alive 🔥");
+								localStorage.setItem('notify-last', today);
+							}, 4000);
+						}
+					})
+					.catch(() => {});
+			}
+		}
+		return stop;
+	});
 </script>
 
 <div class="flex h-dvh flex-col">
