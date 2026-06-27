@@ -2,7 +2,7 @@
 	import type { DayState } from './streak';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	import Wilt from './Wilt.svelte';
+	import Snowflake from '@lucide/svelte/icons/snowflake';
 
 	interface Props {
 		year: number;
@@ -70,7 +70,7 @@
 						aria-label="Open {c.iso}"
 					>
 						{#if c.state === 'frozen'}
-							<Wilt size={18} />
+							<Snowflake class="freeze-ic" />
 						{:else}
 							{c.day}
 						{/if}
@@ -148,10 +148,10 @@
 	.cell.missed:hover {
 		color: var(--foreground);
 	}
-	/* Logged — connected bloom pill across consecutive days. */
+	/* Logged — connected fire pill across consecutive days. */
 	.cell.logged {
-		color: #fff;
-		background: linear-gradient(180deg, #ff85c2, #ec4899);
+		color: #3a2300;
+		background: linear-gradient(180deg, #ffb01f, #ff881e);
 		border-radius: 9999px;
 		cursor: pointer;
 	}
@@ -166,16 +166,21 @@
 	/* today (not yet logged) — ring */
 	.cell.today {
 		border-radius: 9999px;
-		box-shadow: inset 0 0 0 2.5px #f9a8d4;
-		color: #ec4899;
+		box-shadow: inset 0 0 0 2.5px #ffc800;
+		color: #ff9a2f;
 		cursor: pointer;
 	}
-	/* missed-but-covered — wilted flower */
+	/* freeze — blue gem circle */
 	.cell.frozen {
 		border-radius: 9999px;
-		background: color-mix(in oklch, #8a7256 22%, transparent);
+		background: linear-gradient(180deg, #5cc8ff, #1c9eef);
+		color: #fff;
 		cursor: pointer;
 		margin: 2px;
 		height: calc(2.4rem - 4px);
+	}
+	.cell :global(.freeze-ic) {
+		height: 1.05rem;
+		width: 1.05rem;
 	}
 </style>

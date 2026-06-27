@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Flower from './Flower.svelte';
+	import Flame from './Flame.svelte';
 	import Check from '@lucide/svelte/icons/check';
 
 	interface Day {
@@ -16,9 +16,9 @@
 </script>
 
 <div class="header">
-	<Flower size={104} dim={streak === 0} />
+	<Flame size={108} dim={streak === 0} />
 	<div class="count">{streak}</div>
-	<div class="label">day streak</div>
+	<div class="label">day streak{streak === 1 ? '' : ''}</div>
 
 	<div class="week">
 		{#each week as d, i (d.iso)}
@@ -40,9 +40,9 @@
 	</div>
 
 	{#if !todayDone}
-		<p class="nudge">Water your journal today to keep it blooming 🌸</p>
+		<p class="nudge">Write today's journal to keep your streak alive 🔥</p>
 	{:else}
-		<p class="nudge done">Logged today — still blooming! 🌸</p>
+		<p class="nudge done">Logged today — streak safe! 🎉</p>
 	{/if}
 </div>
 
@@ -55,12 +55,12 @@
 		padding: 0.5rem 0 1rem;
 	}
 	.count {
-		margin-top: 0.5rem;
+		margin-top: 0.4rem;
 		font-size: 3.4rem;
 		font-weight: 800;
 		line-height: 1;
 		letter-spacing: -0.02em;
-		background: linear-gradient(180deg, #ff9ecd, #ec4899);
+		background: linear-gradient(180deg, #ffb01f, #ff7a2f);
 		-webkit-background-clip: text;
 		background-clip: text;
 		color: transparent;
@@ -68,7 +68,7 @@
 	.label {
 		font-size: 1.1rem;
 		font-weight: 700;
-		color: #ec4899;
+		color: #ff8a3d;
 	}
 	.week {
 		margin-top: 1rem;
@@ -88,7 +88,7 @@
 		color: var(--muted-foreground);
 	}
 	.dow.today {
-		color: #ec4899;
+		color: #ff8a3d;
 	}
 	.dot {
 		display: grid;
@@ -97,10 +97,10 @@
 		place-items: center;
 		border-radius: 9999px;
 		background: color-mix(in oklch, var(--foreground) 8%, transparent);
-		color: #fff;
+		color: #3a2a00;
 	}
 	.dot.done {
-		background: linear-gradient(180deg, #ff85c2, #ec4899);
+		background: linear-gradient(180deg, #ffb01f, #ff8a1e);
 		border-radius: 0;
 	}
 	.dot.done.rl {
@@ -112,7 +112,7 @@
 		border-bottom-right-radius: 9999px;
 	}
 	.dot.today {
-		box-shadow: 0 0 0 2.5px #f9a8d4;
+		box-shadow: 0 0 0 2.5px #ffc800;
 	}
 	.nudge {
 		margin-top: 1.1rem;
