@@ -5,6 +5,8 @@
 	const date = $derived(page.url.searchParams.get('date') ?? undefined);
 </script>
 
-{#key date}
-	<EntryForm {date} />
-{/key}
+<div class="h-full">
+	{#key date}
+		<EntryForm {date} />
+	{/key}
+</div>

@@ -16,7 +16,7 @@
 	}));
 </script>
 
-<div class="flex flex-col gap-4">
+<div class="h-full">
 	{#if note.data}
 		{#key note.data.id}
 			<NoteForm note={note.data} />

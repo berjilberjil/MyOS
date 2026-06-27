@@ -18,7 +18,7 @@
 	}));
 </script>
 
-<div class="flex flex-col gap-4">
+<div class="h-full">
 	{#if entry.data}
 		{#key entry.data.id}
 			<EntryForm entry={entry.data} />

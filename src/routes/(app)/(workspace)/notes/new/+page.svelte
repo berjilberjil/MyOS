@@ -2,4 +2,6 @@
 	import NoteForm from '$lib/components/notes/NoteForm.svelte';
 </script>
 
-<NoteForm />
+<div class="h-full">
+	<NoteForm />
+</div>

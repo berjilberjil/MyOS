@@ -2,15 +2,15 @@
 	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
-	import { useQueryClient } from '@tanstack/svelte-query';
+	import { createQuery, useQueryClient } from '@tanstack/svelte-query';
 	import NotesEditor from '$lib/notes/editor/NotesEditor.svelte';
-	import { createNote, updateNote, type Note } from '$lib/notes/notes';
+	import EditorShell from '$lib/components/editor/EditorShell.svelte';
+	import { createNote, updateNote, listNotes, type Note } from '$lib/notes/notes';
 	import { uploadNoteImage, uploadNoteFile, withPathMedia } from '$lib/notes/media';
 	import { signedUrlFor } from '$lib/journal/media';
 	import type { JournalDoc } from '$lib/journal/types';
 	import Pin from '@lucide/svelte/icons/pin';
 	import Link2 from '@lucide/svelte/icons/link';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Download from '@lucide/svelte/icons/download';
 
 	let { note }: { note?: Note } = $props();
@@ -29,8 +29,9 @@
 	let created = $state(!!note);
 	let touched = false;
 	let saveState = $state<'idle' | 'saving' | 'saved'>('idle');
-	let copied = $state(false);
 	let timer: ReturnType<typeof setTimeout> | undefined;
+
+	const notesList = createQuery(() => ({ queryKey: ['notes'], queryFn: () => listNotes() }));
 
 	async function handleImage(file: File): Promise<string> {
 		const path = await uploadNoteImage(file, savedId);
@@ -63,7 +64,6 @@
 		touched = true;
 	}
 
-	// Debounced auto-save whenever the note changes.
 	$effect(() => {
 		void [title, pinned, doc];
 		if (!touched) return;
@@ -76,46 +76,38 @@
 
 	function share() {
 		navigator.clipboard?.writeText(`${location.origin}/notes/${savedId}`);
-		copied = true;
 		toast.success('Link copied to clipboard');
-		setTimeout(() => (copied = false), 1600);
-	}
-
-	async function back() {
-		clearTimeout(timer);
-		if (touched) await persist();
-		goto('/notes');
 	}
 </script>
 
-<div class="flex w-full max-w-3xl flex-col gap-4">
-	<div class="no-print flex items-center justify-between gap-2">
-		<button class="chip" onclick={back}>
-			<ArrowLeft class="size-3.5" />
-			Back
+<EditorShell
+	entries={(notesList.data ?? []).map((n) => ({
+		id: n.id,
+		href: `/notes/${n.id}`,
+		title: `${n.pinned ? '📌 ' : ''}${n.title || 'Untitled'}`
+	}))}
+	listTitle="Notes"
+	newHref="/notes/new"
+	backHref="/notes"
+	status={saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'Saved' : ''}
+>
+	{#snippet actions(close)}
+		<button class="menu-item" class:on={pinned} onclick={() => { pinned = !pinned; markDirty(); close(); }}>
+			<Pin class="size-4" /> {pinned ? 'Unpin' : 'Pin'}
 		</button>
-		<div class="flex items-center gap-2">
-			<span class="status">
-				{#if saveState === 'saving'}Saving…{:else if saveState === 'saved'}Saved{/if}
-			</span>
-			<button class="chip" class:on={pinned} onclick={() => { pinned = !pinned; markDirty(); }} aria-pressed={pinned}>
-				<Pin class="size-3.5" />
-				{pinned ? 'Pinned' : 'Pin'}
-			</button>
-			<button class="chip" onclick={() => window.print()}>
-				<Download class="size-3.5" />
-				PDF
-			</button>
-			<button class="chip" onclick={share}>
-				<Link2 class="size-3.5" />
-				{copied ? 'Copied' : 'Share'}
-			</button>
-		</div>
-	</div>
+		<button class="menu-item" onclick={() => { share(); close(); }}>
+			<Link2 class="size-4" /> Copy link
+		</button>
+		<button class="menu-item" onclick={() => { window.print(); close(); }}>
+			<Download class="size-4" /> Download PDF
+		</button>
+	{/snippet}
 
-	<div class="print-area flex flex-col gap-4">
+	{#snippet header()}
 		<input class="title-input" placeholder="Untitled" bind:value={title} oninput={markDirty} />
+	{/snippet}
 
+	{#snippet children()}
 		<NotesEditor
 			content={doc}
 			onUpdate={(d) => {
@@ -125,16 +117,17 @@
 			onImageUpload={handleImage}
 			onFileUpload={handleFile}
 		/>
-	</div>
-</div>
+	{/snippet}
+</EditorShell>
 
 <style>
 	.title-input {
 		width: 100%;
+		margin-bottom: 1rem;
 		background: transparent;
 		border: none;
 		outline: none;
-		font-size: 2rem;
+		font-size: 2.1rem;
 		font-weight: 700;
 		letter-spacing: -0.02em;
 		color: var(--foreground);
@@ -142,31 +135,5 @@
 	}
 	.title-input::placeholder {
 		color: color-mix(in oklch, var(--muted-foreground) 60%, transparent);
-	}
-	.status {
-		min-width: 3.5rem;
-		text-align: right;
-		font-size: var(--text-xs);
-		color: var(--muted-foreground);
-	}
-	.chip {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.35rem;
-		border-radius: 9999px;
-		border: 1px solid var(--border);
-		padding: 0.3rem 0.7rem;
-		font-size: var(--text-xs);
-		color: var(--muted-foreground);
-		transition: background-color var(--duration-fast) ease, color var(--duration-fast) ease;
-	}
-	.chip:hover {
-		background: var(--accent);
-		color: var(--accent-foreground);
-	}
-	.chip.on {
-		background: color-mix(in oklch, var(--primary) 14%, transparent);
-		border-color: color-mix(in oklch, var(--primary) 40%, var(--border));
-		color: var(--primary);
 	}
 </style>
