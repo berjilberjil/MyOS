@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Check from '@lucide/svelte/icons/check';
-	import Snowflake from '@lucide/svelte/icons/snowflake';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
+	import Wilt from './Wilt.svelte';
 
 	interface Props {
 		daysPracticed: number;
@@ -20,21 +20,21 @@
 			<span class="ic check"><Check class="size-4" strokeWidth={3} /></span>
 			<div class="meta">
 				<span class="val">{daysPracticed}</span>
-				<span class="lbl">Days practiced</span>
+				<span class="lbl">Days bloomed</span>
 			</div>
 		</div>
 		<div class="stat">
-			<span class="ic freeze"><Snowflake class="size-4" /></span>
+			<span class="ic wilt"><Wilt size={18} /></span>
 			<div class="meta">
 				<span class="val">{freezesUsed}</span>
-				<span class="lbl">Freezes used</span>
+				<span class="lbl">Wilted days</span>
 			</div>
 		</div>
 	</div>
 
 	<div class="goal">
 		<div class="goal-head">
-			<span class="goal-title">Streak Goal</span>
+			<span class="goal-title">Bloom Goal</span>
 			<span class="goal-num">{streak} / {streakGoal}</span>
 		</div>
 		<div class="track">
@@ -74,10 +74,10 @@
 		color: #fff;
 	}
 	.ic.check {
-		background: #ff9a1e;
+		background: #ec4899;
 	}
-	.ic.freeze {
-		background: #1c9eef;
+	.ic.wilt {
+		background: color-mix(in oklch, #8a7256 28%, transparent);
 	}
 	.meta {
 		display: flex;
@@ -112,7 +112,7 @@
 	.goal-num {
 		font-size: var(--text-sm);
 		font-weight: 700;
-		color: #ff8a3d;
+		color: #ec4899;
 	}
 	.track {
 		position: relative;
@@ -124,7 +124,7 @@
 	.fill {
 		height: 100%;
 		border-radius: 9999px;
-		background: linear-gradient(90deg, #ffb01f, #ff881e);
+		background: linear-gradient(90deg, #ff85c2, #ec4899);
 		transition: width 0.8s var(--ease-entrance);
 		min-width: 16px;
 	}
@@ -138,7 +138,7 @@
 		transform: translateY(-50%);
 		place-items: center;
 		border-radius: 6px;
-		background: #ff881e;
+		background: #ec4899;
 		color: #fff;
 		box-shadow: 0 0 0 3px var(--card);
 	}
