@@ -9,10 +9,11 @@
 	import { kmToM, mToKm, kgToG, gToKg, hoursToMin, minToHours } from '$lib/health/units';
 	import { MOODS } from '$lib/journal/types';
 	import { getPersonal } from '$lib/profile/personal';
-	import { listFitnessPhotos, uploadFitnessPhoto } from '$lib/health/photos';
+	import { listFitnessPhotos, uploadFitnessPhoto, deleteFitnessPhoto } from '$lib/health/photos';
 	import WeightChart from '$lib/health/WeightChart.svelte';
 	import { toast } from 'svelte-sonner';
 	import Camera from '@lucide/svelte/icons/camera';
+	import X from '@lucide/svelte/icons/x';
 
 	const qc = useQueryClient();
 	const fitness = createQuery(() => ({ queryKey: ['fitness'], queryFn: () => recentFitness() }));
@@ -58,6 +59,15 @@
 			toast.error('Could not upload photo');
 		}
 		uploading = false;
+	}
+	async function removePhoto(id: string, path: string) {
+		try {
+			await deleteFitnessPhoto(id, path);
+			qc.invalidateQueries({ queryKey: ['fitness', 'photos'] });
+			toast.success('Photo deleted');
+		} catch {
+			toast.error('Could not delete photo');
+		}
 	}
 
 	// Health "Log day"
@@ -164,10 +174,15 @@
 			{#if (photos.data ?? []).length}
 				<div class="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
 					{#each photos.data ?? [] as p (p.id)}
-						<a href={p.url} target="_blank" rel="noopener" class="photo">
-							<img src={p.url} alt="Progress {p.created_at.slice(0, 10)}" loading="lazy" />
+						<div class="photo">
+							<a href={p.url} target="_blank" rel="noopener">
+								<img src={p.url} alt="Progress {p.created_at.slice(0, 10)}" loading="lazy" />
+							</a>
 							<span class="photo-date">{p.created_at.slice(0, 10)}</span>
-						</a>
+							<button class="photo-x" onclick={() => removePhoto(p.id, p.path)} aria-label="Delete photo">
+								<X class="size-3.5" />
+							</button>
+						</div>
 					{/each}
 				</div>
 			{:else}
@@ -258,10 +273,35 @@
 		border-radius: var(--radius-md);
 		border: 1px solid var(--border);
 	}
+	.photo a {
+		display: block;
+		height: 100%;
+		width: 100%;
+	}
 	.photo img {
 		height: 100%;
 		width: 100%;
 		object-fit: cover;
+	}
+	.photo-x {
+		position: absolute;
+		right: 4px;
+		top: 4px;
+		display: grid;
+		height: 22px;
+		width: 22px;
+		place-items: center;
+		border-radius: 9999px;
+		background: rgb(0 0 0 / 0.6);
+		color: #fff;
+		opacity: 0;
+		transition: opacity var(--duration-fast) ease;
+	}
+	.photo:hover .photo-x {
+		opacity: 1;
+	}
+	.photo-x:hover {
+		background: var(--destructive);
 	}
 	.photo-date {
 		position: absolute;

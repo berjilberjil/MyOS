@@ -5,7 +5,7 @@ const storage = new SupabaseStorageService('media');
 
 export interface Belonging {
 	id: string;
-	kind: 'purchase' | 'clothing';
+	kind: 'purchase' | 'clothing' | 'wardrobe_photo';
 	category: string;
 	name: string;
 	cost_paise: number | null;
@@ -63,6 +63,14 @@ export async function addBelonging(b: Partial<Belonging>): Promise<void> {
 	};
 	if (b.image_path) row.image_path = b.image_path;
 	const { error } = await supabaseBrowser().from('belongings').insert(row as never);
+	if (error) throw error;
+}
+
+export async function updateBelonging(
+	id: string,
+	patch: Partial<Pick<Belonging, 'qty' | 'cost_paise' | 'name'>>
+): Promise<void> {
+	const { error } = await supabaseBrowser().from('belongings').update(patch).eq('id', id);
 	if (error) throw error;
 }
 

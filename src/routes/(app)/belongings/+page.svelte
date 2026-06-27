@@ -5,14 +5,16 @@
 	import { Input } from '$lib/components/ui/input';
 	import { cn } from '$lib/utils';
 	import { todayIso } from '$lib/finance/dates';
-	import { formatINR, toPaise, sumPaise } from '$lib/money';
+	import { formatINR, toPaise, fromPaise, sumPaise } from '$lib/money';
 	import {
 		listBelongings,
 		addBelonging,
+		updateBelonging,
 		removeBelonging,
 		uploadBelongingImage,
 		PURCHASE_CATEGORIES,
-		CLOTHING_CATEGORIES
+		CLOTHING_CATEGORIES,
+		type Belonging
 	} from '$lib/belongings/belongings';
 	import BelongingThumb from '$lib/belongings/BelongingThumb.svelte';
 	import { toast } from 'svelte-sonner';
@@ -20,16 +22,24 @@
 	import Minus from '@lucide/svelte/icons/minus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import ImagePlus from '@lucide/svelte/icons/image-plus';
+	import X from '@lucide/svelte/icons/x';
 
 	const qc = useQueryClient();
 	const list = createQuery(() => ({ queryKey: ['belongings'], queryFn: () => listBelongings() }));
 	function invalidate() {
 		qc.invalidateQueries({ queryKey: ['belongings'] });
 	}
+	function refetch() {
+		return qc.refetchQueries({ queryKey: ['belongings'] });
+	}
 
 	const all = $derived(list.data ?? []);
 	const purchases = $derived(all.filter((b) => b.kind === 'purchase'));
-	const clothing = $derived(all.filter((b) => b.kind === 'clothing'));
+	const countRows = $derived(new Map(all.filter((b) => b.kind === 'clothing').map((b) => [b.category, b])));
+	function galleryFor(cat: string): Belonging[] {
+		return all.filter((b) => b.kind === 'wardrobe_photo' && b.category === cat);
+	}
+
 	const totalSpent = $derived(sumPaise(purchases.map((p) => p.cost_paise ?? 0)));
 	const byCategory = $derived.by(() => {
 		const m = new Map<string, number>();
@@ -37,54 +47,72 @@
 		return [...m.entries()].sort((a, b) => b[1] - a[1]);
 	});
 
-	function serverCount(cat: string): number {
-		return clothing.filter((c) => c.category === cat).reduce((s, c) => s + c.qty, 0);
-	}
-	function photosFor(cat: string) {
-		return clothing.filter((c) => c.category === cat && c.image_path);
-	}
-
-	// Optimistic counts: clicks update instantly; writes are debounced + batched.
-	let pending = $state<Record<string, number>>({});
+	// ---- Wardrobe (optimistic, no flicker) ----
+	let qtyOverride = $state<Record<string, number>>({});
+	let priceOverride = $state<Record<string, string>>({});
 	const timers: Record<string, ReturnType<typeof setTimeout>> = {};
-	function shown(cat: string): number {
-		return Math.max(0, serverCount(cat) + (pending[cat] ?? 0));
+	const ptimers: Record<string, ReturnType<typeof setTimeout>> = {};
+
+	function serverQty(cat: string): number {
+		return countRows.get(cat)?.qty ?? 0;
 	}
-	const wardrobeTotal = $derived(CLOTHING_CATEGORIES.reduce((s, c) => s + shown(c), 0));
+	function shown(cat: string): number {
+		return qtyOverride[cat] ?? serverQty(cat);
+	}
+	function priceStr(cat: string): string {
+		if (priceOverride[cat] !== undefined) return priceOverride[cat];
+		const cp = countRows.get(cat)?.cost_paise;
+		return cp != null ? String(fromPaise(cp)) : '';
+	}
+	function valueOf(cat: string): number {
+		const p = Number(priceStr(cat)) || 0;
+		return shown(cat) * toPaise(p);
+	}
+	const wardrobeItems = $derived(CLOTHING_CATEGORIES.reduce((s, c) => s + shown(c), 0));
+	const wardrobeValue = $derived(CLOTHING_CATEGORIES.reduce((s, c) => s + valueOf(c), 0));
+
+	async function commitClothing(cat: string, patch: { qty?: number; cost_paise?: number | null }) {
+		const row = countRows.get(cat);
+		if (row) await updateBelonging(row.id, patch);
+		else await addBelonging({ kind: 'clothing', category: cat, qty: patch.qty ?? 0, cost_paise: patch.cost_paise ?? null });
+	}
 
 	function bump(cat: string, d: number) {
-		const next = (pending[cat] ?? 0) + d;
-		if (serverCount(cat) + next < 0) return;
-		pending[cat] = next;
+		const next = Math.max(0, shown(cat) + d);
+		qtyOverride[cat] = next;
 		clearTimeout(timers[cat]);
-		timers[cat] = setTimeout(() => flush(cat), 550);
+		timers[cat] = setTimeout(() => flushQty(cat), 500);
 	}
-	async function flush(cat: string) {
-		const d = pending[cat] ?? 0;
-		delete pending[cat];
-		if (!d) return;
+	async function flushQty(cat: string) {
+		const target = qtyOverride[cat];
+		if (target === undefined) return;
 		try {
-			if (d > 0) {
-				await Promise.all(
-					Array.from({ length: d }, () => addBelonging({ kind: 'clothing', category: cat, qty: 1 }))
-				);
-			} else {
-				const rows = clothing
-					.filter((c) => c.category === cat)
-					.sort(
-						(a, b) =>
-							(a.image_path ? 1 : 0) - (b.image_path ? 1 : 0) || b.created_at.localeCompare(a.created_at)
-					)
-					.slice(0, -d);
-				await Promise.all(rows.map((r) => removeBelonging(r.id)));
-			}
+			await commitClothing(cat, { qty: target });
+			await refetch();
 		} catch {
-			toast.error('Could not save wardrobe');
+			toast.error('Could not save count');
 		}
-		invalidate();
+		if (qtyOverride[cat] === target) delete qtyOverride[cat]; // keep newer edits
 	}
 
-	// Wardrobe photo (shared hidden input)
+	function setPrice(cat: string, val: string) {
+		priceOverride[cat] = val;
+		clearTimeout(ptimers[cat]);
+		ptimers[cat] = setTimeout(() => flushPrice(cat), 700);
+	}
+	async function flushPrice(cat: string) {
+		const val = priceOverride[cat];
+		if (val === undefined) return;
+		try {
+			await commitClothing(cat, { cost_paise: val ? toPaise(Number(val)) : null });
+			await refetch();
+		} catch {
+			toast.error('Could not save price');
+		}
+		if (priceOverride[cat] === val) delete priceOverride[cat];
+	}
+
+	// Wardrobe photos (shared hidden input)
 	let wardrobeFile: HTMLInputElement;
 	let photoCat = $state('');
 	function pickWardrobePhoto(cat: string) {
@@ -98,7 +126,7 @@
 		if (!file) return;
 		try {
 			const image_path = await uploadBelongingImage(file);
-			await addBelonging({ kind: 'clothing', category: photoCat, qty: 1, image_path });
+			await addBelonging({ kind: 'wardrobe_photo', category: photoCat, qty: 1, image_path });
 			invalidate();
 			toast.success(`Photo added to ${photoCat}`);
 		} catch {
@@ -106,7 +134,7 @@
 		}
 	}
 
-	// Purchase add (with optional photo)
+	// Purchases
 	let pName = $state('');
 	let pCat = $state(PURCHASE_CATEGORIES[0]);
 	let pCost = $state('');
@@ -115,8 +143,7 @@
 	let pPhoto = $state<File | null>(null);
 	let pSaving = $state(false);
 	function onPurchasePhoto(e: Event) {
-		const input = e.currentTarget as HTMLInputElement;
-		pPhoto = input.files?.[0] ?? null;
+		pPhoto = (e.currentTarget as HTMLInputElement).files?.[0] ?? null;
 	}
 	async function addPurchase() {
 		if (!pName) return;
@@ -144,7 +171,7 @@
 
 	async function del(id: string) {
 		await removeBelonging(id);
-		invalidate();
+		await refetch();
 		toast.success('Removed');
 	}
 </script>
@@ -162,7 +189,8 @@
 		<Card.Content class="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
 			<div>
 				<div class="text-xs uppercase tracking-wide text-muted-foreground">Total spent on stuff</div>
-				<div class="text-4xl font-bold tracking-tight">{formatINR(totalSpent)}</div>
+				<div class="text-4xl font-bold tracking-tight">{formatINR(totalSpent + wardrobeValue)}</div>
+				<div class="text-xs text-muted-foreground">purchases {formatINR(totalSpent)} · wardrobe {formatINR(wardrobeValue)}</div>
 			</div>
 			{#if byCategory.length}
 				<div class="flex flex-wrap gap-2">
@@ -220,33 +248,45 @@
 	<Card.Root>
 		<Card.Header class="flex-row items-baseline justify-between">
 			<Card.Title>Wardrobe</Card.Title>
-			<span class="text-sm text-muted-foreground">{wardrobeTotal} items</span>
+			<span class="text-sm text-muted-foreground">{wardrobeItems} items · {formatINR(wardrobeValue)}</span>
 		</Card.Header>
 		<Card.Content>
-			<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+			<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
 				{#each CLOTHING_CATEGORIES as cat (cat)}
 					{@const n = shown(cat)}
-					{@const pics = photosFor(cat)}
-					<div class={cn('flex flex-col gap-2.5 rounded-xl border p-3', n ? 'border-primary/40 bg-primary/5' : 'border-border')}>
+					{@const pics = galleryFor(cat)}
+					<div class={cn('flex flex-col gap-3 rounded-xl border p-3.5', n ? 'border-primary/40 bg-primary/5' : 'border-border')}>
 						<div class="flex items-start justify-between">
 							<div>
-								<div class="text-xs text-muted-foreground">{cat}</div>
+								<div class="text-sm font-semibold">{cat}</div>
 								<div class="text-3xl font-bold leading-none">{n}</div>
+								{#if valueOf(cat) > 0}<div class="mt-0.5 text-xs text-muted-foreground">worth {formatINR(valueOf(cat))}</div>{/if}
 							</div>
-							<button class="ph-btn" onclick={() => pickWardrobePhoto(cat)} aria-label="Add photo to {cat}" title="Add photo">
-								<ImagePlus class="size-4" />
-							</button>
+							<div class="flex items-center gap-1.5">
+								<span class="text-xs text-muted-foreground">₹</span>
+								<input
+									class="price"
+									type="number"
+									step="1"
+									placeholder="price"
+									value={priceStr(cat)}
+									oninput={(e) => setPrice(cat, e.currentTarget.value)}
+									aria-label="Avg price for {cat}"
+								/>
+							</div>
 						</div>
 
-						{#if pics.length}
-							<div class="flex flex-wrap gap-1">
-								{#each pics as pic (pic.id)}
-									<button class="thumb-wrap" onclick={() => del(pic.id)} title="Remove photo">
-										{#if pic.image_path}<BelongingThumb path={pic.image_path} alt={cat} />{/if}
-									</button>
-								{/each}
-							</div>
-						{/if}
+						<div class="gallery">
+							{#each pics as pic (pic.id)}
+								<div class="cell">
+									{#if pic.image_path}<BelongingThumb path={pic.image_path} alt={cat} />{/if}
+									<button class="x" onclick={() => del(pic.id)} aria-label="Delete photo"><X class="size-3" /></button>
+								</div>
+							{/each}
+							<button class="cell add" onclick={() => pickWardrobePhoto(cat)} aria-label="Add photo to {cat}">
+								<ImagePlus class="size-5" />
+							</button>
+						</div>
 
 						<div class="flex gap-2">
 							<button class="step" onclick={() => bump(cat, -1)} disabled={n === 0} aria-label="Remove one {cat}">
@@ -264,16 +304,64 @@
 </div>
 
 <style>
+	.price {
+		width: 64px;
+		height: 28px;
+		border-radius: var(--radius-md);
+		border: 1px solid var(--border);
+		background: var(--background);
+		padding: 0 0.4rem;
+		font-size: var(--text-sm);
+		text-align: right;
+	}
+	.gallery {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 0.4rem;
+	}
+	.cell {
+		position: relative;
+		aspect-ratio: 1;
+		overflow: hidden;
+		border-radius: var(--radius-md);
+		border: 1px solid var(--border);
+	}
+	.cell.add {
+		display: grid;
+		place-items: center;
+		color: var(--muted-foreground);
+		background: var(--card);
+	}
+	.cell.add:hover {
+		background: var(--accent);
+		color: var(--foreground);
+	}
+	.x {
+		position: absolute;
+		right: 2px;
+		top: 2px;
+		display: grid;
+		height: 18px;
+		width: 18px;
+		place-items: center;
+		border-radius: 9999px;
+		background: rgb(0 0 0 / 0.6);
+		color: #fff;
+		opacity: 0;
+		transition: opacity var(--duration-fast) ease;
+	}
+	.cell:hover .x {
+		opacity: 1;
+	}
 	.step {
 		display: grid;
-		height: 44px;
+		height: 42px;
 		flex: 1;
 		place-items: center;
 		border-radius: var(--radius-lg);
 		border: 1px solid var(--border);
 		color: var(--foreground);
 		background: var(--card);
-		transition: background-color var(--duration-fast) ease;
 	}
 	.step:hover:not(:disabled) {
 		background: var(--accent);
@@ -290,30 +378,7 @@
 		border-color: var(--primary);
 		color: var(--primary-foreground);
 	}
-	.step-add:hover:not(:disabled) {
+	.step-add:hover {
 		background: color-mix(in oklch, var(--primary) 88%, black);
-	}
-	.ph-btn {
-		display: grid;
-		height: 30px;
-		width: 30px;
-		place-items: center;
-		border-radius: var(--radius-md);
-		border: 1px solid var(--border);
-		color: var(--muted-foreground);
-	}
-	.ph-btn:hover {
-		background: var(--accent);
-		color: var(--foreground);
-	}
-	.thumb-wrap {
-		height: 40px;
-		width: 40px;
-		overflow: hidden;
-		border-radius: var(--radius-md);
-		border: 1px solid var(--border);
-	}
-	.thumb-wrap:hover {
-		outline: 2px solid var(--destructive);
 	}
 </style>

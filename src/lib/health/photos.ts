@@ -5,6 +5,7 @@ const storage = new SupabaseStorageService('media');
 
 export interface ProgressPhoto {
 	id: string;
+	path: string;
 	url: string;
 	created_at: string;
 }
@@ -29,10 +30,24 @@ export async function listFitnessPhotos(limit = 24): Promise<ProgressPhoto[]> {
 	const out: ProgressPhoto[] = [];
 	for (const r of (data ?? []) as { id: string; storage_path: string; created_at: string }[]) {
 		try {
-			out.push({ id: r.id, url: await storage.signedUrl(r.storage_path, 60 * 60 * 24 * 7), created_at: r.created_at });
+			out.push({
+				id: r.id,
+				path: r.storage_path,
+				url: await storage.signedUrl(r.storage_path, 60 * 60 * 24 * 7),
+				created_at: r.created_at
+			});
 		} catch {
 			/* skip unsignable */
 		}
 	}
 	return out;
+}
+
+export async function deleteFitnessPhoto(id: string, path: string): Promise<void> {
+	await supabaseBrowser().from('media_assets').delete().eq('id', id);
+	try {
+		await storage.remove(path);
+	} catch {
+		/* storage cleanup best-effort */
+	}
 }
