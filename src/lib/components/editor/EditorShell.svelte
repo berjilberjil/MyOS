@@ -33,7 +33,8 @@
 		children
 	}: Props = $props();
 
-	let collapsed = $state(false);
+	// Collapse the entry list by default on phones so the editor gets full width.
+	let collapsed = $state(typeof window !== 'undefined' && window.innerWidth < 768);
 	let menuOpen = $state(false);
 
 	function isActive(href: string): boolean {
