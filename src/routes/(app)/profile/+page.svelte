@@ -18,6 +18,7 @@
 	import Camera from '@lucide/svelte/icons/camera';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import LogOut from '@lucide/svelte/icons/log-out';
+	import { getPersonal, savePersonal, BLOOD_GROUPS, EMPTY_PERSONAL, type Personal } from '$lib/profile/personal';
 
 	let fileEl: HTMLInputElement;
 	let name = $state('');
@@ -25,11 +26,26 @@
 	let status = $state('');
 	let busy = $state(false);
 
+	let personal = $state<Personal>({ ...EMPTY_PERSONAL });
+	let savingPersonal = $state(false);
+
 	onMount(async () => {
 		name = profileState.name;
 		const { data } = await supabaseBrowser().auth.getUser();
 		email = data.user?.email ?? '';
+		personal = await getPersonal();
 	});
+
+	async function savePersonalData() {
+		savingPersonal = true;
+		try {
+			await savePersonal($state.snapshot(personal) as Personal);
+			toast.success('Personal details saved');
+		} catch {
+			toast.error('Could not save details');
+		}
+		savingPersonal = false;
+	}
 
 	async function onPick(e: Event) {
 		const input = e.currentTarget as HTMLInputElement;
@@ -138,6 +154,54 @@
 		<Card.Content class="flex gap-2">
 			<Input bind:value={name} placeholder="Your name" class="max-w-xs" onkeydown={(e) => e.key === 'Enter' && saveName()} />
 			<Button size="sm" disabled={!name.trim() || name === profileState.name} onclick={saveName}>Save</Button>
+		</Card.Content>
+	</Card.Root>
+
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>Body &amp; personal</Card.Title>
+			<Card.Description>One-time details — only your weight tends to change.</Card.Description>
+		</Card.Header>
+		<Card.Content class="flex flex-col gap-3">
+			<div class="grid gap-3 sm:grid-cols-2">
+				<label class="flex flex-col gap-1">
+					<span class="text-xs text-muted-foreground">Current weight (kg)</span>
+					<Input type="number" step="0.1" bind:value={personal.current_weight_kg} placeholder="—" />
+				</label>
+				<label class="flex flex-col gap-1">
+					<span class="text-xs text-muted-foreground">Goal weight (kg)</span>
+					<Input type="number" step="0.1" bind:value={personal.goal_weight_kg} placeholder="—" />
+				</label>
+				<label class="flex flex-col gap-1">
+					<span class="text-xs text-muted-foreground">Height (cm)</span>
+					<Input type="number" step="0.1" bind:value={personal.height_cm} placeholder="—" />
+				</label>
+				<label class="flex flex-col gap-1">
+					<span class="text-xs text-muted-foreground">Blood group</span>
+					<select bind:value={personal.blood_group} class="h-9 rounded-md border border-border bg-background px-2 text-sm">
+						<option value={null}>—</option>
+						{#each BLOOD_GROUPS as bg}<option value={bg}>{bg}</option>{/each}
+					</select>
+				</label>
+				<label class="flex flex-col gap-1">
+					<span class="text-xs text-muted-foreground">Date of birth</span>
+					<Input type="date" bind:value={personal.dob} />
+				</label>
+				<label class="flex flex-col gap-1">
+					<span class="text-xs text-muted-foreground">Sex</span>
+					<select bind:value={personal.sex} class="h-9 rounded-md border border-border bg-background px-2 text-sm">
+						<option value={null}>—</option>
+						<option value="male">Male</option>
+						<option value="female">Female</option>
+						<option value="other">Other</option>
+					</select>
+				</label>
+			</div>
+			<div>
+				<Button size="sm" disabled={savingPersonal} onclick={savePersonalData}>
+					{savingPersonal ? 'Saving…' : 'Save details'}
+				</Button>
+			</div>
 		</Card.Content>
 	</Card.Root>
 
