@@ -1,4 +1,4 @@
-export type Theme = 'light' | 'dark' | 'system' | 'tui';
+export type Theme = 'light' | 'dark' | 'system';
 
 const STORAGE_KEY = 'theme';
 
@@ -11,14 +11,17 @@ function prefersDark(): boolean {
 
 export function getStoredTheme(): Theme {
 	if (typeof localStorage === 'undefined') return 'system';
-	return (localStorage.getItem(STORAGE_KEY) as Theme) ?? 'system';
+	const v = localStorage.getItem(STORAGE_KEY);
+	// 'tui' (Tokyo Night) was removed — fall back to dark.
+	if (v === 'tui') return 'dark';
+	return (v as Theme) ?? 'system';
 }
 
 export function applyTheme(theme: Theme): void {
 	const root = document.documentElement;
 	const dark = theme === 'dark' || (theme === 'system' && prefersDark());
-	root.classList.toggle('tui', theme === 'tui');
-	root.classList.toggle('dark', dark || theme === 'tui');
+	root.classList.remove('tui');
+	root.classList.toggle('dark', dark);
 }
 
 export function setTheme(theme: Theme): void {

@@ -81,7 +81,6 @@
 	const themes: { key: Theme; label: string }[] = [
 		{ key: 'light', label: 'Light' },
 		{ key: 'dark', label: 'Dark' },
-		{ key: 'tui', label: 'Tokyo' },
 		{ key: 'system', label: 'System' }
 	];
 	function pickTheme(t: Theme) {

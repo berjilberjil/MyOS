@@ -10,7 +10,7 @@
 	import Palette from '@lucide/svelte/icons/palette';
 	import LogOut from '@lucide/svelte/icons/log-out';
 
-	const themes: Theme[] = ['light', 'dark', 'tui', 'system'];
+	const themes: Theme[] = ['light', 'dark', 'system'];
 
 	function cycle() {
 		const i = themes.indexOf(themeState.current);

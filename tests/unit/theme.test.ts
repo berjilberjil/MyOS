@@ -14,12 +14,7 @@ describe('theme store', () => {
 		expect(document.documentElement.classList.contains('tui')).toBe(false);
 	});
 
-	it('applies tui (Tokyo Night) class', () => {
-		applyTheme('tui');
-		expect(document.documentElement.classList.contains('tui')).toBe(true);
-	});
-
-	it('light theme clears dark and tui', () => {
+	it('light theme clears dark', () => {
 		applyTheme('dark');
 		applyTheme('light');
 		expect(document.documentElement.classList.contains('dark')).toBe(false);
@@ -27,9 +22,14 @@ describe('theme store', () => {
 	});
 
 	it('setTheme persists to localStorage', () => {
-		setTheme('tui');
-		expect(localStorage.getItem('theme')).toBe('tui');
-		expect(getStoredTheme()).toBe('tui');
+		setTheme('dark');
+		expect(localStorage.getItem('theme')).toBe('dark');
+		expect(getStoredTheme()).toBe('dark');
+	});
+
+	it('migrates legacy tui to dark', () => {
+		localStorage.setItem('theme', 'tui');
+		expect(getStoredTheme()).toBe('dark');
 	});
 
 	it('getStoredTheme defaults to system', () => {

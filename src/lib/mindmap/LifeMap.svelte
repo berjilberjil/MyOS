@@ -35,6 +35,15 @@
 	});
 	const total = $derived(modules.reduce((a, m) => a + m.count, 0));
 
+	// Default to the fully-expanded view once the modules load.
+	let autoExpanded = false;
+	$effect(() => {
+		if (!autoExpanded && modules.length) {
+			autoExpanded = true;
+			expanded = new Set(modules.map((m) => m.key));
+		}
+	});
+
 	const children = $derived.by(() => {
 		const out: { id: string; parent: string; label: string; href: string; x: number; y: number }[] = [];
 		for (const m of modules) {
