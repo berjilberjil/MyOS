@@ -43,7 +43,7 @@
 <div class="flex h-dvh flex-col">
 	<AppTopBar />
 	<div
-		class="kn-enter min-h-0 flex-1 overflow-auto p-4 pb-[calc(5.25rem+env(safe-area-inset-bottom))] md:px-6 md:pb-6"
+		class="kn-enter min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4 pb-[calc(5.25rem+env(safe-area-inset-bottom))] md:px-6 md:pb-6"
 		style="scrollbar-gutter: stable;"
 	>
 		<div class="mx-auto w-full max-w-[1500px]">

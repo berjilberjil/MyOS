@@ -9,6 +9,7 @@
 	import { categoriesRepo } from '$lib/finance/categories';
 	import { createTransaction } from '$lib/finance/transactions';
 	import type { TxnType } from '$lib/finance/types';
+	import * as haptics from '$lib/haptics';
 
 	const qc = useQueryClient();
 	let open = $state(false);
@@ -43,11 +44,13 @@
 			});
 		},
 		onSuccess: () => {
+			haptics.success();
 			qc.invalidateQueries({ queryKey: ['finance'] });
 			amount = '';
 			categoryId = null;
 			open = false;
-		}
+		},
+		onError: () => haptics.warning()
 	}));
 
 	const canSave = $derived(

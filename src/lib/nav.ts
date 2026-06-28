@@ -19,21 +19,37 @@ export interface NavItem {
 	icon: Component;
 	// Extra path prefixes that should also mark this item active (for grouped tabs).
 	match?: string[];
+	// Workspace carries the long-press quick-create gesture.
+	gesture?: boolean;
 }
 
-// Single source of truth for navigation + map iconography, so the sidebar and
-// the life map read as one system (same icon per module in both places).
+// Single source of truth for navigation + map iconography, so the shell and the
+// life map read as one system (same icon per module in both places).
 // Journal / Notes / To-dos / Goals are grouped under one "Workspace" tab.
-export const NAV: NavItem[] = [
-	{ key: 'dashboard', href: '/', label: 'Dashboard', icon: LayoutDashboard },
+
+/** Elevated center button. Journaling is the landing, so Dashboard is opt-in. */
+export const DASHBOARD: NavItem = {
+	key: 'dashboard',
+	href: '/dashboard',
+	label: 'Dashboard',
+	icon: LayoutDashboard
+};
+
+/** Tabs left of the elevated center button. */
+export const NAV_LEFT: NavItem[] = [
 	{ key: 'finance', href: '/finance', label: 'Finance', icon: Wallet },
 	{
 		key: 'workspace',
 		href: '/journal',
 		label: 'Workspace',
 		icon: SquareStack,
-		match: ['/journal', '/notes', '/todos', '/goals']
-	},
+		match: ['/journal', '/notes', '/todos', '/goals'],
+		gesture: true
+	}
+];
+
+/** Tabs right of the elevated center button. */
+export const NAV_RIGHT: NavItem[] = [
 	{
 		key: 'fitness',
 		href: '/fitness',
@@ -41,9 +57,14 @@ export const NAV: NavItem[] = [
 		icon: Activity,
 		match: ['/fitness', '/health']
 	},
-	{ key: 'belongings', href: '/belongings', label: 'Belongings', icon: Package },
-	{ key: 'mindmap', href: '/mindmap', label: 'Life map', icon: Waypoints }
+	{ key: 'belongings', href: '/belongings', label: 'Belongings', icon: Package }
 ];
+
+/** Lives in the top bar, not the bottom dock. */
+export const LIFE_MAP: NavItem = { key: 'mindmap', href: '/mindmap', label: 'Life map', icon: Waypoints };
+
+/** Full bottom-dock order (left · center · right), for active-state lookups. */
+export const NAV: NavItem[] = [...NAV_LEFT, DASHBOARD, ...NAV_RIGHT];
 
 // Icon per mindmap module key (graph.ts MODULES keys).
 export const MODULE_ICONS: Record<string, Component> = {

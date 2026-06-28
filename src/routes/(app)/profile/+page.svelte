@@ -244,7 +244,7 @@
 	<Card.Root>
 		<Card.Header>
 			<Card.Title>Notifications</Card.Title>
-			<Card.Description>A daily browser nudge to keep your journal streak alive.</Card.Description>
+			<Card.Description>A daily nudge to keep your journal streak alive.</Card.Description>
 		</Card.Header>
 		<Card.Content class="flex flex-wrap items-center gap-3">
 			{#if !notifSupported}

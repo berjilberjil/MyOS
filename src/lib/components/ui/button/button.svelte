@@ -42,6 +42,8 @@
 </script>
 
 <script lang="ts">
+	import * as haptics from "$lib/haptics";
+
 	let {
 		class: className,
 		variant = "default",
@@ -50,9 +52,16 @@
 		href = undefined,
 		type = "button",
 		disabled,
+		onclick,
 		children,
 		...restProps
 	}: ButtonProps = $props();
+
+	// Primary actions get a medium impact; other variants stay silent.
+	function handleClick(e: MouseEvent) {
+		if (variant === "default" && !disabled) haptics.impact();
+		(onclick as ((e: MouseEvent) => void) | undefined)?.(e);
+	}
 </script>
 
 {#if href}
@@ -64,6 +73,7 @@
 		aria-disabled={disabled}
 		role={disabled ? "link" : undefined}
 		tabindex={disabled ? -1 : undefined}
+		onclick={handleClick}
 		{...restProps}
 	>
 		{@render children?.()}
@@ -75,6 +85,7 @@
 		class={cn(buttonVariants({ variant, size }), className)}
 		{type}
 		{disabled}
+		onclick={handleClick}
 		{...restProps}
 	>
 		{@render children?.()}

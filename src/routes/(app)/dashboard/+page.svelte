@@ -188,9 +188,9 @@
 			<Card.Content class="divide-y divide-border">
 				{#each upcoming as t (t.id)}
 					{@const b = todoBucket(t.due_on, t.done, today)}
-					<div class="flex items-center gap-3 py-2 text-sm">
-						<span class="font-medium">{t.title}</span>
-						<span class="ml-auto rounded-full px-2 py-0.5 text-xs" class:overdue={b === 'overdue'} style={b === 'overdue' ? '' : 'background:var(--secondary)'}>
+					<div class="flex min-w-0 items-center gap-3 py-2 text-sm">
+						<span class="truncate font-medium">{t.title}</span>
+						<span class="ml-auto shrink-0 rounded-full px-2 py-0.5 text-xs" class:overdue={b === 'overdue'} style={b === 'overdue' ? '' : 'background:var(--secondary)'}>
 							{t.due_on}
 						</span>
 					</div>

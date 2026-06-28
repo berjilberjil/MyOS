@@ -3,6 +3,12 @@
 	import { profileState } from '$lib/stores/profile.svelte';
 	import { headerTabs } from '$lib/stores/headerTabs.svelte';
 	import { cn } from '$lib/utils';
+	import { LIFE_MAP } from '$lib/nav';
+	import * as haptics from '$lib/haptics';
+
+	const lifeMapActive = $derived(
+		page.url.pathname === LIFE_MAP.href || page.url.pathname.startsWith(LIFE_MAP.href + '/')
+	);
 
 	function active(href: string): boolean {
 		const p = page.url.pathname;
@@ -25,9 +31,21 @@
 			</nav>
 		{/if}
 	</div>
-	<a href="/profile" class="avatar-link" aria-label="Profile">
-		<img src={profileState.avatar} alt={profileState.name} width="30" height="30" />
-	</a>
+	<div class="right">
+		<a
+			href={LIFE_MAP.href}
+			class="iconbtn"
+			class:on={lifeMapActive}
+			aria-label={LIFE_MAP.label}
+			aria-current={lifeMapActive ? 'page' : undefined}
+			onclick={() => haptics.tick()}
+		>
+			<LIFE_MAP.icon class="ic" />
+		</a>
+		<a href="/profile" class="avatar-link" aria-label="Profile" onclick={() => haptics.tick()}>
+			<img src={profileState.avatar} alt={profileState.name} width="30" height="30" />
+		</a>
+	</div>
 </header>
 
 <style>
@@ -40,7 +58,10 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 1rem;
-		height: 52px;
+		/* Bar = 52px of content BELOW the notch. height is border-box, so the
+		   safe-area inset must be added on top — otherwise the inset eats the
+		   52px and the row spills past the bottom divider. */
+		height: calc(52px + env(safe-area-inset-top));
 		padding: 0 14px;
 		padding-top: env(safe-area-inset-top);
 		border-bottom: 1px solid var(--border);
@@ -49,7 +70,7 @@
 	}
 	@media (min-width: 768px) {
 		.mtop {
-			height: 56px;
+			height: calc(56px + env(safe-area-inset-top));
 			padding-inline: 24px;
 		}
 	}
@@ -94,6 +115,34 @@
 		background: var(--secondary);
 		font-weight: 500;
 		color: var(--secondary-foreground);
+	}
+	.right {
+		display: flex;
+		flex-shrink: 0;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.iconbtn {
+		display: grid;
+		height: 34px;
+		width: 34px;
+		place-items: center;
+		border-radius: 9999px;
+		color: var(--muted-foreground);
+		text-decoration: none;
+		-webkit-tap-highlight-color: transparent;
+		transition: background-color var(--duration-fast) ease, color var(--duration-fast) ease;
+	}
+	.iconbtn:hover {
+		background: var(--secondary);
+		color: var(--foreground);
+	}
+	.iconbtn.on {
+		color: var(--primary);
+	}
+	.iconbtn :global(.ic) {
+		height: 19px;
+		width: 19px;
 	}
 	.avatar-link img {
 		height: 30px;

@@ -310,9 +310,18 @@
 		font-size: 16px;
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;
+		/* iOS WKWebView inflates text unpredictably ("boosting") — lock it so the
+		   bottom-nav labels and type scale render at the intended size. */
+		-webkit-text-size-adjust: 100%;
+		text-size-adjust: 100%;
 	}
 	body {
 		@apply bg-background text-foreground;
+		/* No rogue-wide element may widen the document — that would push the
+		   fixed bottom nav's right edge off-screen on iOS. Also kill the
+		   double-tap-to-zoom delay so taps feel native. */
+		overflow-x: clip;
+		touch-action: manipulation;
 	}
 	h1, h2, h3 {
 		text-wrap: balance;
