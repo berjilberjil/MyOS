@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { NAV_LEFT, NAV_RIGHT, DASHBOARD, type NavItem } from '$lib/nav';
@@ -30,20 +31,40 @@
 	let startX = 0;
 	let startY = 0;
 	let timer: ReturnType<typeof setTimeout> | undefined;
+	let capturedEl: HTMLElement | null = null;
+	let capturedId: number | null = null;
 
 	function todayIso(): string {
 		return new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD, local
+	}
+
+	function releaseCapture() {
+		try {
+			if (capturedEl && capturedId !== null) capturedEl.releasePointerCapture?.(capturedId);
+		} catch {
+			/* already released */
+		}
+		capturedEl = null;
+		capturedId = null;
 	}
 
 	function wsDown(e: PointerEvent) {
 		engaged = false;
 		startX = e.clientX;
 		startY = e.clientY;
-		(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+		capturedEl = e.currentTarget as HTMLElement;
+		capturedId = e.pointerId;
+		// Capture ONLY once the long-press engages — a plain tap never captures the
+		// pointer, so it can never wedge or swallow taps on other controls.
 		timer = setTimeout(() => {
 			engaged = true;
 			target = 'journal';
 			haptics.impact();
+			try {
+				capturedEl?.setPointerCapture?.(capturedId as number);
+			} catch {
+				/* ignore */
+			}
 		}, LONG_PRESS_MS);
 	}
 
@@ -64,12 +85,14 @@
 	function wsUp() {
 		clearTimeout(timer);
 		if (!engaged) {
+			releaseCapture();
 			tabTap(NAV_LEFT[1]); // plain tap → open Workspace
 			return;
 		}
 		const action = actionForRelease(target);
 		target = 'idle';
 		engaged = false;
+		releaseCapture();
 		if (action === 'open-journal') {
 			haptics.success();
 			goto(`/journal/new?date=${todayIso()}`);
@@ -83,6 +106,7 @@
 		clearTimeout(timer);
 		target = 'idle';
 		engaged = false;
+		releaseCapture();
 	}
 
 	const chipLabel = $derived(
@@ -91,9 +115,59 @@
 
 	const Workspace = NAV_LEFT[1];
 	const FarLeft = NAV_LEFT[0];
+
+	// ---- Desktop auto-hide (web/hover devices only; touch stays pinned) ----
+	let autoHide = $state(false);
+	let revealed = $state(true);
+	let hideTimer: ReturnType<typeof setTimeout> | undefined;
+
+	function scheduleHide(delay = 2200) {
+		clearTimeout(hideTimer);
+		hideTimer = setTimeout(() => (revealed = false), delay);
+	}
+	function keepOpen() {
+		clearTimeout(hideTimer);
+		revealed = true;
+	}
+	function leave() {
+		if (autoHide) scheduleHide(1200);
+	}
+
+	onMount(() => {
+		// Only hover + fine-pointer devices (desktop browser). Touch/iOS: always shown.
+		const mq = window.matchMedia('(hover: hover) and (pointer: fine)');
+		if (!mq.matches) return;
+		autoHide = true;
+		revealed = false;
+		const onMove = (e: MouseEvent) => {
+			if (e.clientY >= window.innerHeight - 110) {
+				revealed = true;
+				scheduleHide();
+			}
+		};
+		window.addEventListener('mousemove', onMove);
+		return () => {
+			window.removeEventListener('mousemove', onMove);
+			clearTimeout(hideTimer);
+		};
+	});
 </script>
 
-<nav class="mnav" class:gesturing aria-label="Primary">
+{#if autoHide && !revealed}
+	<button class="peek" onmouseenter={keepOpen} aria-label="Show navigation">
+		<span></span>
+	</button>
+{/if}
+
+<nav
+	class="mnav"
+	class:gesturing
+	class:autohide={autoHide}
+	class:revealed
+	onmouseenter={keepOpen}
+	onmouseleave={leave}
+	aria-label="Primary"
+>
 	<!-- left tabs -->
 	<a
 		href={FarLeft.href}
@@ -187,6 +261,42 @@
 		padding: 5px 3px calc(5px + env(safe-area-inset-bottom));
 		overflow: visible; /* let the elevated button + chip escape upward */
 	}
+	/* Desktop only: tuck the bar away until the pointer nears the bottom edge. */
+	.mnav.autohide {
+		transition:
+			transform 0.32s var(--ease-entrance),
+			opacity 0.28s ease;
+	}
+	.mnav.autohide:not(.revealed) {
+		transform: translateY(calc(100% + 28px));
+		opacity: 0;
+		pointer-events: none;
+	}
+	/* Hover affordance shown while the desktop bar is tucked away. */
+	.peek {
+		position: fixed;
+		bottom: 0;
+		left: 50%;
+		z-index: 39;
+		display: grid;
+		height: 22px;
+		width: 140px;
+		transform: translateX(-50%);
+		place-items: center;
+		background: transparent;
+		border: none;
+		cursor: pointer;
+	}
+	.peek span {
+		height: 4px;
+		width: 48px;
+		border-radius: 9999px;
+		background: color-mix(in oklch, var(--foreground) 22%, transparent);
+		transition: background-color var(--duration-fast) ease;
+	}
+	.peek:hover span {
+		background: var(--primary);
+	}
 	.item {
 		position: relative;
 		display: flex;
@@ -204,7 +314,11 @@
 		color: var(--muted-foreground);
 		text-decoration: none;
 		cursor: pointer;
+		touch-action: manipulation; /* no tap delay / missed taps on iOS */
 		-webkit-tap-highlight-color: transparent;
+		-webkit-user-select: none;
+		user-select: none;
+		-webkit-touch-callout: none;
 		transition: opacity var(--duration-fast) ease;
 	}
 	.ws {
@@ -274,6 +388,7 @@
 		transition:
 			transform var(--duration-fast) var(--ease-entrance),
 			box-shadow var(--duration-fast) ease;
+		touch-action: manipulation;
 		-webkit-tap-highlight-color: transparent;
 	}
 	.center :global(.ic) {

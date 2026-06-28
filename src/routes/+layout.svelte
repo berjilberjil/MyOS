@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import { onMount } from 'svelte';
+	import { onNavigate } from '$app/navigation';
 	import { QueryClientProvider } from '@tanstack/svelte-query';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { queryClient } from '$lib/data/query-client';
@@ -10,6 +11,18 @@
 	import { SupabaseRepository } from '$lib/data/repository';
 
 	let { children } = $props();
+
+	// Smooth cross-page transitions via the View Transitions API (WebKit/iOS 18+).
+	// Graceful no-op where unsupported; the CSS keyframes respect reduced-motion.
+	onNavigate((navigation) => {
+		if (!document.startViewTransition) return;
+		return new Promise((resolve) => {
+			document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+		});
+	});
 
 	const resolveRepo = (table: string) => new SupabaseRepository<{ id: string }>(table);
 
