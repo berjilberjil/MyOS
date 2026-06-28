@@ -261,16 +261,43 @@
 		padding: 5px 3px calc(5px + env(safe-area-inset-bottom));
 		overflow: visible; /* let the elevated button + chip escape upward */
 	}
-	/* Desktop only: tuck the bar away until the pointer nears the bottom edge. */
+	/* Desktop only: a floating, centered, rounded pill that tucks away until the
+	   pointer nears the bottom edge. Touch/iOS keeps the full-width bar above. */
 	.mnav.autohide {
+		left: 50%;
+		right: auto;
+		bottom: 16px;
+		width: min(560px, calc(100% - 2rem));
+		gap: 4px;
+		padding: 6px 12px;
+		border: 1px solid var(--border);
+		border-radius: 9999px;
+		box-shadow: 0 18px 40px -16px rgb(0 0 0 / 0.55);
+		transform: translateX(-50%);
 		transition:
 			transform 0.32s var(--ease-entrance),
 			opacity 0.28s ease;
 	}
 	.mnav.autohide:not(.revealed) {
-		transform: translateY(calc(100% + 28px));
+		transform: translate(-50%, calc(100% + 32px));
 		opacity: 0;
 		pointer-events: none;
+	}
+	.mnav.autohide .item {
+		border-radius: 9999px;
+		padding: 6px 8px;
+	}
+	.mnav.autohide .item.active {
+		background: color-mix(in oklch, var(--primary) 12%, transparent);
+	}
+	.mnav.autohide .bar {
+		display: none; /* the pill uses a filled active state, not the top tick */
+	}
+	.mnav.autohide .center {
+		margin-top: -18px; /* gentler raise inside the floating dock */
+		height: 50px;
+		width: 50px;
+		max-width: 50px;
 	}
 	/* Hover affordance shown while the desktop bar is tucked away. */
 	.peek {
