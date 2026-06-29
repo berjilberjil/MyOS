@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
+	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { openSectionFromQuery, focusSection } from '$lib/openFromQuery';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -10,6 +13,11 @@
 
 	const qc = useQueryClient();
 	const todos = createQuery(() => ({ queryKey: ['todos'], queryFn: () => listTodos() }));
+
+	// Bottom-nav quick action: /todos?add=1
+	onMount(() =>
+		openSectionFromQuery(page.url.searchParams.get('add'), { '1': () => focusSection('todo-add') })
+	);
 
 	let title = $state('');
 	let dueOn = $state('');
@@ -45,7 +53,7 @@
 </script>
 
 <div class="kn-stagger flex flex-col gap-4">
-	<Card.Root>
+	<Card.Root id="todo-add">
 		<Card.Content class="flex flex-wrap items-end gap-2 pt-4">
 			<Input placeholder="What needs doing?" bind:value={title} class="w-64" />
 			<Input type="date" bind:value={dueOn} class="w-40" />

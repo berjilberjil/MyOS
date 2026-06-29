@@ -4,13 +4,7 @@
 	import { page } from '$app/state';
 	import { NAV_LEFT, NAV_RIGHT, DASHBOARD, type NavItem } from '$lib/nav';
 	import * as haptics from '$lib/haptics';
-	import {
-		LONG_PRESS_MS,
-		targetForDelta,
-		actionForRelease,
-		shouldAbortPress,
-		type GestureTarget
-	} from './navGesture';
+	import { LONG_PRESS_MS, shouldAbortPress } from './navGesture';
 
 	function isActive(item: { href: string; match?: string[] }): boolean {
 		const p = page.url.pathname;
@@ -24,19 +18,17 @@
 		goto(item.href);
 	}
 
-	// ---- Workspace long-press quick-create gesture ----
-	let target = $state<GestureTarget>('idle');
-	const gesturing = $derived(target !== 'idle');
-	let engaged = false; // long-press fired this interaction
+	// ---- Long-press fan menu (any nav button with a `menu`) ----
+	// Hold a button → its quick-actions fan up; keep holding and slide onto one to
+	// highlight it (haptic tick); release to open it. A plain tap just navigates.
+	let openKey = $state<string | null>(null);
+	let hoverIndex = $state(-1);
+	let pressItem: NavItem | null = null;
 	let startX = 0;
 	let startY = 0;
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	let capturedEl: HTMLElement | null = null;
 	let capturedId: number | null = null;
-
-	function todayIso(): string {
-		return new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD, local
-	}
 
 	function releaseCapture() {
 		try {
@@ -48,17 +40,16 @@
 		capturedId = null;
 	}
 
-	function wsDown(e: PointerEvent) {
-		engaged = false;
+	function navDown(item: NavItem, e: PointerEvent) {
+		pressItem = item;
 		startX = e.clientX;
 		startY = e.clientY;
 		capturedEl = e.currentTarget as HTMLElement;
 		capturedId = e.pointerId;
-		// Capture ONLY once the long-press engages — a plain tap never captures the
-		// pointer, so it can never wedge or swallow taps on other controls.
+		if (!item.menu) return; // plain tab — handled on pointerup
 		timer = setTimeout(() => {
-			engaged = true;
-			target = 'journal';
+			openKey = item.key;
+			hoverIndex = -1;
 			haptics.impact();
 			try {
 				capturedEl?.setPointerCapture?.(capturedId as number);
@@ -68,53 +59,48 @@
 		}, LONG_PRESS_MS);
 	}
 
-	function wsMove(e: PointerEvent) {
-		const dx = e.clientX - startX;
-		const dy = e.clientY - startY;
-		if (!engaged) {
-			if (shouldAbortPress(dx, dy)) clearTimeout(timer); // a scroll, not a hold
+	function navMove(e: PointerEvent) {
+		if (openKey === null) {
+			if (pressItem?.menu && shouldAbortPress(e.clientX - startX, e.clientY - startY)) {
+				clearTimeout(timer); // a scroll, not a hold
+			}
 			return;
 		}
-		const next = targetForDelta(dx, dy);
-		if (next !== target) {
-			target = next;
-			haptics.tick();
+		const el = document.elementFromPoint(e.clientX, e.clientY);
+		const mi = el?.closest('[data-menu-index]') as HTMLElement | null;
+		const idx = mi ? Number(mi.dataset.menuIndex) : -1;
+		if (idx !== hoverIndex) {
+			hoverIndex = idx;
+			if (idx >= 0) haptics.tick();
 		}
 	}
 
-	function wsUp() {
+	function navUp(item: NavItem) {
 		clearTimeout(timer);
-		if (!engaged) {
+		if (openKey === null) {
 			releaseCapture();
-			tabTap(NAV_LEFT[1]); // plain tap → open Workspace
+			tabTap(item); // plain tap
 			return;
 		}
-		const action = actionForRelease(target);
-		target = 'idle';
-		engaged = false;
+		const chosen = hoverIndex >= 0 ? item.menu?.[hoverIndex] : null;
+		openKey = null;
+		hoverIndex = -1;
 		releaseCapture();
-		if (action === 'open-journal') {
+		if (chosen) {
 			haptics.success();
-			goto(`/journal/new?date=${todayIso()}`);
-		} else if (action === 'open-note') {
-			haptics.success();
-			goto('/notes/new');
+			goto(chosen.href);
 		}
 	}
 
-	function wsCancel() {
+	function navCancel() {
 		clearTimeout(timer);
-		target = 'idle';
-		engaged = false;
+		openKey = null;
+		hoverIndex = -1;
 		releaseCapture();
 	}
 
-	const chipLabel = $derived(
-		target === 'note' ? 'New Note' : target === 'cancel' ? 'Release to cancel' : 'New Journal'
-	);
-
-	const Workspace = NAV_LEFT[1];
-	const FarLeft = NAV_LEFT[0];
+	const LEFT = NAV_LEFT;
+	const RIGHT = NAV_RIGHT;
 
 	// ---- Desktop auto-hide (web/hover devices only; touch stays pinned) ----
 	let autoHide = $state(false);
@@ -130,13 +116,12 @@
 		revealed = true;
 	}
 	function leave() {
-		if (autoHide) scheduleHide(1200);
+		if (autoHide && openKey === null) scheduleHide(1200);
 	}
 
 	onMount(() => {
-		// Only hover + fine-pointer devices (desktop browser). Touch/iOS: always shown.
 		const mq = window.matchMedia('(hover: hover) and (pointer: fine)');
-		if (!mq.matches) return;
+		if (!mq.matches) return; // touch/iOS → always shown
 		autoHide = true;
 		revealed = false;
 		const onMove = (e: MouseEvent) => {
@@ -153,6 +138,45 @@
 	});
 </script>
 
+{#snippet navButton(item: NavItem)}
+	{@const active = isActive(item)}
+	{@const isOpen = openKey === item.key}
+	<button
+		type="button"
+		class="item"
+		class:active
+		class:menuopen={isOpen}
+		aria-current={active ? 'page' : undefined}
+		aria-label={item.menu
+			? `${item.label} — tap to open, hold for quick actions`
+			: item.label}
+		onpointerdown={(e) => navDown(item, e)}
+		onpointermove={navMove}
+		onpointerup={() => navUp(item)}
+		onpointercancel={navCancel}
+	>
+		<span class="bar" aria-hidden="true"></span>
+		<item.icon class="ic" />
+		<span class="lbl">{item.label}</span>
+
+		{#if isOpen && item.menu}
+			<div class="menu" role="menu">
+				{#each item.menu as mi, i (mi.href)}
+					<span
+						class="menu-item"
+						class:on={hoverIndex === i}
+						data-menu-index={i}
+						style="--i: {item.menu.length - 1 - i}"
+						role="menuitem"
+					>
+						{mi.label}
+					</span>
+				{/each}
+			</div>
+		{/if}
+	</button>
+{/snippet}
+
 {#if autoHide && !revealed}
 	<button class="peek" onmouseenter={keepOpen} aria-label="Show navigation">
 		<span></span>
@@ -161,52 +185,18 @@
 
 <nav
 	class="mnav"
-	class:gesturing
+	class:menuing={openKey !== null}
 	class:autohide={autoHide}
 	class:revealed
 	onmouseenter={keepOpen}
 	onmouseleave={leave}
 	aria-label="Primary"
 >
-	<!-- left tabs -->
-	<a
-		href={FarLeft.href}
-		class="item"
-		class:active={isActive(FarLeft)}
-		aria-current={isActive(FarLeft) ? 'page' : undefined}
-		onclick={(e) => {
-			e.preventDefault();
-			tabTap(FarLeft);
-		}}
-	>
-		<span class="bar" aria-hidden="true"></span>
-		<FarLeft.icon class="ic" />
-		<span class="lbl">{FarLeft.label}</span>
-	</a>
+	{#each LEFT as item (item.key)}
+		{@render navButton(item)}
+	{/each}
 
-	<!-- workspace tab with quick-create gesture -->
-	<button
-		type="button"
-		class="item ws"
-		class:active={isActive(Workspace)}
-		aria-label="{Workspace.label} — hold for new journal, hold and drag right for new note"
-		onpointerdown={wsDown}
-		onpointermove={wsMove}
-		onpointerup={wsUp}
-		onpointercancel={wsCancel}
-	>
-		<span class="bar" aria-hidden="true"></span>
-		<Workspace.icon class="ic" />
-		<span class="lbl">{Workspace.label}</span>
-
-		{#if gesturing}
-			<span class="chip" class:note={target === 'note'} class:cancel={target === 'cancel'}>
-				{chipLabel}
-			</span>
-		{/if}
-	</button>
-
-	<!-- elevated center: Dashboard -->
+	<!-- elevated center: Dashboard (no menu) -->
 	<a
 		href={DASHBOARD.href}
 		class="center"
@@ -222,23 +212,8 @@
 		<DASHBOARD.icon class="ic" />
 	</a>
 
-	<!-- right tabs -->
-	{#each NAV_RIGHT as item (item.href)}
-		{@const active = isActive(item)}
-		<a
-			href={item.href}
-			class="item"
-			class:active
-			aria-current={active ? 'page' : undefined}
-			onclick={(e) => {
-				e.preventDefault();
-				tabTap(item);
-			}}
-		>
-			<span class="bar" aria-hidden="true"></span>
-			<item.icon class="ic" />
-			<span class="lbl">{item.label}</span>
-		</a>
+	{#each RIGHT as item (item.key)}
+		{@render navButton(item)}
 	{/each}
 </nav>
 
@@ -259,7 +234,7 @@
 		background: color-mix(in oklch, var(--card) 88%, transparent);
 		backdrop-filter: blur(14px);
 		padding: 5px 3px calc(5px + env(safe-area-inset-bottom));
-		overflow: visible; /* let the elevated button + chip escape upward */
+		overflow: visible; /* let the elevated button + menus escape upward */
 	}
 	/* Desktop only: a floating, centered, rounded pill that tucks away until the
 	   pointer nears the bottom edge. Touch/iOS keeps the full-width bar above. */
@@ -291,10 +266,10 @@
 		background: color-mix(in oklch, var(--primary) 12%, transparent);
 	}
 	.mnav.autohide .bar {
-		display: none; /* the pill uses a filled active state, not the top tick */
+		display: none;
 	}
 	.mnav.autohide .center {
-		margin-top: -18px; /* gentler raise inside the floating dock */
+		margin-top: -18px;
 		height: 50px;
 		width: 50px;
 		max-width: 50px;
@@ -324,6 +299,7 @@
 	.peek:hover span {
 		background: var(--primary);
 	}
+
 	.item {
 		position: relative;
 		display: flex;
@@ -341,15 +317,12 @@
 		color: var(--muted-foreground);
 		text-decoration: none;
 		cursor: pointer;
-		touch-action: manipulation; /* no tap delay / missed taps on iOS */
+		touch-action: none; /* own the long-press; never scroll from the nav */
 		-webkit-tap-highlight-color: transparent;
 		-webkit-user-select: none;
 		user-select: none;
 		-webkit-touch-callout: none;
 		transition: opacity var(--duration-fast) ease;
-	}
-	.ws {
-		touch-action: none; /* own the drag so the page doesn't scroll mid-gesture */
 	}
 	.item.active {
 		color: var(--primary);
@@ -357,10 +330,10 @@
 	.item:active {
 		background: var(--accent);
 	}
-	/* dim the non-workspace tabs while the gesture is live */
-	.mnav.gesturing .item:not(.ws),
-	.mnav.gesturing .center {
-		opacity: 0.4;
+	/* dim everything except the open menu's button */
+	.mnav.menuing .item:not(.menuopen),
+	.mnav.menuing .center {
+		opacity: 0.35;
 	}
 	.bar {
 		position: absolute;
@@ -381,8 +354,7 @@
 		width: 21px;
 		transition: transform var(--duration-fast) var(--ease-entrance);
 	}
-	.ws.active :global(.ic),
-	.mnav.gesturing .ws :global(.ic) {
+	.item.menuopen :global(.ic) {
 		transform: scale(1.12);
 	}
 	.item.active :global(.ic) {
@@ -406,7 +378,7 @@
 		height: 54px;
 		width: 54px;
 		max-width: 54px;
-		margin-top: -22px; /* raise above the bar */
+		margin-top: -22px;
 		border-radius: 9999px;
 		background: var(--primary);
 		color: var(--primary-foreground);
@@ -431,51 +403,61 @@
 			0 10px 24px -8px color-mix(in oklch, var(--primary) 70%, transparent);
 	}
 
-	/* Floating quick-create chip above the Workspace tab */
-	.chip {
+	/* Long-press fan menu: pills stacked upward from the pressed button. */
+	.menu {
 		position: absolute;
 		bottom: calc(100% + 12px);
 		left: 50%;
-		transform: translateX(-50%) translateY(0);
+		transform: translateX(-50%);
+		display: flex;
+		flex-direction: column-reverse;
+		align-items: center;
+		gap: 7px;
+		pointer-events: none; /* the captured pointer drives selection via hit-test */
+		z-index: 1;
+	}
+	.menu-item {
+		pointer-events: auto; /* must be hit-testable by elementFromPoint during the drag */
 		white-space: nowrap;
 		border-radius: 9999px;
-		padding: 6px 12px;
+		padding: 8px 14px;
 		font-size: 12px;
 		font-weight: 600;
-		color: var(--primary-foreground);
-		background: var(--primary);
-		box-shadow: 0 12px 28px -10px rgb(0 0 0 / 0.55);
-		pointer-events: none;
+		color: var(--foreground);
+		background: color-mix(in oklch, var(--card) 96%, transparent);
+		border: 1px solid var(--border);
+		box-shadow: 0 10px 24px -12px rgb(0 0 0 / 0.5);
+		transform-origin: bottom center;
+		animation: menu-pop var(--duration-normal) var(--ease-entrance) backwards;
+		animation-delay: calc(var(--i) * 28ms);
 		transition:
-			transform var(--duration-normal) var(--ease-entrance),
 			background-color var(--duration-fast) ease,
-			opacity var(--duration-fast) ease;
+			color var(--duration-fast) ease,
+			transform var(--duration-fast) var(--ease-entrance);
 	}
-	.chip::after {
-		/* little pointer toward the button */
-		content: '';
-		position: absolute;
-		top: 100%;
-		left: 50%;
-		transform: translateX(-50%);
-		border: 5px solid transparent;
-		border-top-color: var(--primary);
+	.menu-item.on {
+		background: var(--primary);
+		color: var(--primary-foreground);
+		border-color: var(--primary);
+		transform: scale(1.06);
 	}
-	.chip.note {
-		transform: translateX(-50%) translateX(64px);
-		background: color-mix(in oklch, var(--primary) 70%, #22d3ee);
-	}
-	.chip.cancel {
-		background: var(--muted);
-		color: var(--muted-foreground);
-		opacity: 0.85;
+	@keyframes menu-pop {
+		from {
+			opacity: 0;
+			transform: translateY(10px) scale(0.85);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0) scale(1);
+		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.chip,
+		.menu-item,
 		.bar,
 		.center,
 		.item :global(.ic) {
+			animation: none;
 			transition: none;
 		}
 	}

@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
+	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { openSectionFromQuery, focusSection } from '$lib/openFromQuery';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -9,6 +12,11 @@
 
 	const qc = useQueryClient();
 	const goals = createQuery(() => ({ queryKey: ['life-goals'], queryFn: () => goalsRepo.list() }));
+
+	// Bottom-nav quick action: /goals?add=1
+	onMount(() =>
+		openSectionFromQuery(page.url.searchParams.get('add'), { '1': () => focusSection('goal-add') })
+	);
 
 	let title = $state('');
 	let description = $state('');
@@ -33,7 +41,7 @@
 </script>
 
 <div class="kn-stagger flex flex-col gap-4">
-	<Card.Root>
+	<Card.Root id="goal-add">
 		<Card.Content class="flex flex-wrap items-end gap-2 pt-4">
 			<Input placeholder="Goal (e.g. Run a half-marathon)" bind:value={title} class="w-64" />
 			<Input placeholder="Why / notes" bind:value={description} class="w-64" />

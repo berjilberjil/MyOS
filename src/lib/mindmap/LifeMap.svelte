@@ -86,13 +86,35 @@
 		expanded = new Set();
 	}
 
+	// Pan with one finger, pinch-zoom with two. Tracks every active pointer so
+	// touch never gets stuck mid-gesture.
 	let dragging = $state(false);
 	let sx = 0;
 	let sy = 0;
 	let stx = 0;
 	let sty = 0;
+	let pinchDist = 0;
+	let pinchK = 1;
+	const pointers = new Map<number, { x: number; y: number }>();
+
+	function twoFingerDist() {
+		const p = [...pointers.values()];
+		if (p.length < 2) return 0;
+		return Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+	}
 	function onPointerDown(e: PointerEvent) {
-		if ((e.target as HTMLElement).closest('[data-node], .controls')) return;
+		const el = e.target as HTMLElement;
+		if (el.closest('.controls')) return; // never fight the zoom buttons
+		// Track every finger so a two-finger pinch works even when fingers land on
+		// nodes (the map is dense). Only pan/capture when a lone finger is on empty space.
+		pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+		if (pointers.size >= 2) {
+			dragging = false; // hand off to pinch
+			pinchDist = twoFingerDist();
+			pinchK = k;
+			return;
+		}
+		if (el.closest('[data-node]')) return; // lone finger on a node → let it tap
 		dragging = true;
 		sx = e.clientX;
 		sy = e.clientY;
@@ -101,12 +123,29 @@
 		(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
 	}
 	function onPointerMove(e: PointerEvent) {
-		if (!dragging) return;
-		tx = stx + (e.clientX - sx);
-		ty = sty + (e.clientY - sy);
+		if (!pointers.has(e.pointerId)) return;
+		pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+		if (pointers.size >= 2) {
+			if (pinchDist > 0) k = clampK(pinchK * (twoFingerDist() / pinchDist));
+		} else if (dragging) {
+			tx = stx + (e.clientX - sx);
+			ty = sty + (e.clientY - sy);
+		}
 	}
-	function onPointerUp() {
-		dragging = false;
+	function onPointerUp(e: PointerEvent) {
+		pointers.delete(e.pointerId);
+		if (pointers.size < 2) pinchDist = 0;
+		if (pointers.size === 1) {
+			// resume panning with the finger that's still down
+			const [p] = [...pointers.values()];
+			dragging = true;
+			sx = p.x;
+			sy = p.y;
+			stx = tx;
+			sty = ty;
+		} else if (pointers.size === 0) {
+			dragging = false;
+		}
 	}
 	function onWheel(e: WheelEvent) {
 		e.preventDefault();
@@ -204,7 +243,7 @@
 		<button class="ctl" aria-label="Reset view" onclick={reset}><Maximize class="size-4" /></button>
 	</div>
 
-	<p class="hint">Drag to pan · scroll to zoom · click a node to expand</p>
+	<p class="hint">Drag to pan · pinch or scroll to zoom · tap a node to expand</p>
 </div>
 
 <style>

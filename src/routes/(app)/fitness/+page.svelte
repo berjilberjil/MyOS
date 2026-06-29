@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
+	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { openSectionFromQuery, focusSection } from '$lib/openFromQuery';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -17,6 +20,16 @@
 	import X from '@lucide/svelte/icons/x';
 
 	const qc = useQueryClient();
+
+	// Bottom-nav quick actions: /fitness?add=workout|photo|log
+	onMount(() =>
+		openSectionFromQuery(page.url.searchParams.get('add'), {
+			workout: () => focusSection('fit-workout'),
+			log: () => focusSection('fit-log'),
+			photo: () => focusSection('fit-photo', { click: true })
+		})
+	);
+
 	const fitness = createQuery(() => ({ queryKey: ['fitness'], queryFn: () => recentFitness() }));
 	const health = createQuery(() => ({ queryKey: ['health'], queryFn: () => recentHealth(120) }));
 	const personalQ = createQuery(() => ({ queryKey: ['personal'], queryFn: () => getPersonal() }));
@@ -160,7 +173,7 @@
 	</Card.Root>
 
 	<!-- Progress photos -->
-	<Card.Root>
+	<Card.Root id="fit-photo">
 		<Card.Header class="flex-row items-center justify-between">
 			<div>
 				<Card.Title>Progress photos</Card.Title>
@@ -199,7 +212,7 @@
 				<Card.Title class="text-2xl">{weekMin} min active</Card.Title>
 			</Card.Header>
 		</Card.Root>
-		<Card.Root>
+		<Card.Root id="fit-log">
 			<Card.Header><Card.Title>Log day</Card.Title></Card.Header>
 			<Card.Content class="flex flex-wrap items-end gap-2">
 				<Input type="date" bind:value={hDate} class="w-40" />
@@ -216,7 +229,7 @@
 		</Card.Root>
 	</div>
 
-	<Card.Root>
+	<Card.Root id="fit-workout">
 		<Card.Header><Card.Title>Log workout</Card.Title></Card.Header>
 		<Card.Content class="flex flex-wrap items-end gap-2">
 			<Input type="date" bind:value={fDate} class="w-40" />

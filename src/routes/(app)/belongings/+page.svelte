@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { createQuery, useQueryClient } from '@tanstack/svelte-query';
+	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { openSectionFromQuery, focusSection } from '$lib/openFromQuery';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -22,6 +25,15 @@
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 
 	const qc = useQueryClient();
+
+	// Bottom-nav quick actions: /belongings?add=purchase|wardrobe
+	onMount(() =>
+		openSectionFromQuery(page.url.searchParams.get('add'), {
+			purchase: () => focusSection('bel-purchase'),
+			wardrobe: () => focusSection('bel-wardrobe')
+		})
+	);
+
 	const list = createQuery(() => ({ queryKey: ['belongings'], queryFn: () => listBelongings() }));
 	function invalidate() {
 		qc.invalidateQueries({ queryKey: ['belongings'] });
@@ -123,7 +135,7 @@
 	</Card.Root>
 
 	<!-- Purchases -->
-	<Card.Root>
+	<Card.Root id="bel-purchase">
 		<Card.Header><Card.Title>Purchases</Card.Title></Card.Header>
 		<Card.Content class="flex flex-col gap-3">
 			<div class="flex flex-wrap items-end gap-2">
@@ -162,7 +174,7 @@
 	</Card.Root>
 
 	<!-- Wardrobe — compact, tap a category for details -->
-	<Card.Root>
+	<Card.Root id="bel-wardrobe">
 		<Card.Header class="flex-row items-baseline justify-between">
 			<Card.Title>Wardrobe</Card.Title>
 			<span class="text-sm text-muted-foreground">{wardrobeItems} items · {formatINR(wardrobeValue)}</span>

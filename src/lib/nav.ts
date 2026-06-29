@@ -12,6 +12,11 @@ import SquareStack from '@lucide/svelte/icons/square-stack';
 import Activity from '@lucide/svelte/icons/activity';
 import Package from '@lucide/svelte/icons/package';
 
+export interface NavMenuItem {
+	label: string;
+	href: string;
+}
+
 export interface NavItem {
 	key: string;
 	href: string;
@@ -19,8 +24,8 @@ export interface NavItem {
 	icon: Component;
 	// Extra path prefixes that should also mark this item active (for grouped tabs).
 	match?: string[];
-	// Workspace carries the long-press quick-create gesture.
-	gesture?: boolean;
+	// Long-press fan menu: slide up + release to pick a sub-page / quick action.
+	menu?: NavMenuItem[];
 }
 
 // Single source of truth for navigation + map iconography, so the shell and the
@@ -37,14 +42,32 @@ export const DASHBOARD: NavItem = {
 
 /** Tabs left of the elevated center button. */
 export const NAV_LEFT: NavItem[] = [
-	{ key: 'finance', href: '/finance', label: 'Finance', icon: Wallet },
+	{
+		key: 'finance',
+		href: '/finance',
+		label: 'Finance',
+		icon: Wallet,
+		menu: [
+			{ label: 'Transactions', href: '/finance/transactions' },
+			{ label: 'Recurring', href: '/finance/recurring' },
+			{ label: 'Accounts', href: '/finance/accounts' },
+			{ label: 'Budgets', href: '/finance/budgets' },
+			{ label: 'Goals', href: '/finance/goals' },
+			{ label: 'Investments', href: '/finance/investments' }
+		]
+	},
 	{
 		key: 'workspace',
 		href: '/journal',
 		label: 'Workspace',
 		icon: SquareStack,
 		match: ['/journal', '/notes', '/todos', '/goals'],
-		gesture: true
+		menu: [
+			{ label: 'New journal', href: '/journal/new' },
+			{ label: 'New note', href: '/notes/new' },
+			{ label: 'New to-do', href: '/todos?add=1' },
+			{ label: 'New goal', href: '/goals?add=1' }
+		]
 	}
 ];
 
@@ -55,9 +78,23 @@ export const NAV_RIGHT: NavItem[] = [
 		href: '/fitness',
 		label: 'Fitness',
 		icon: Activity,
-		match: ['/fitness', '/health']
+		match: ['/fitness', '/health'],
+		menu: [
+			{ label: 'Add workout', href: '/fitness?add=workout' },
+			{ label: 'Add photo', href: '/fitness?add=photo' },
+			{ label: 'Add log', href: '/fitness?add=log' }
+		]
 	},
-	{ key: 'belongings', href: '/belongings', label: 'Belongings', icon: Package }
+	{
+		key: 'belongings',
+		href: '/belongings',
+		label: 'Belongings',
+		icon: Package,
+		menu: [
+			{ label: 'Add purchase', href: '/belongings?add=purchase' },
+			{ label: 'Add wardrobe', href: '/belongings?add=wardrobe' }
+		]
+	}
 ];
 
 /** Lives in the top bar, not the bottom dock. */

@@ -59,7 +59,7 @@
 </script>
 
 <Button
-	class="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-50 h-14 w-14 rounded-full text-2xl shadow-lg md:bottom-6 md:right-6"
+	class="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-50 hidden h-14 w-14 rounded-full text-2xl shadow-lg md:inline-flex md:bottom-6 md:right-6"
 	onclick={() => (open = true)}
 	aria-label="Quick add transaction"
 >
